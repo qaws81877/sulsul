@@ -7,7 +7,7 @@
 	<key>SUFeedURL</key>
 	<string>https://github.com/qaws81877/sulsul/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>REPLACE_WITH_SPARKLE_PUBLIC_KEY</string>
+	<string>00gaKYKlHeOD5LMwzQj+ukNV6499QygSbFfCbqw/iRs=</string>
 	<key>LSUIElement</key>
 	<false/>
 	<key>SUEnableAutomaticChecks</key>
