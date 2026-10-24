@@ -92,9 +92,10 @@ generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
 
 ### Each release
 
-1. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number is an integer greater than the last release's), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
-2. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload.
-3. Publish the DMG and the appcast from that same run folder. The appcast carries the DMG's signature and length, so if the DMG is rebuilt take both again:
+1. Run `make test` and fix any failure first: `make release` only builds, so a failing test would not stop a release.
+2. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number is an integer greater than the last release's), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
+3. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload.
+4. Publish the DMG and the appcast from that same run folder. The appcast carries the DMG's signature and length, so if the DMG is rebuilt take both again:
 
    ```bash
    gh release create v<version> --repo qaws81877/sulsul --target main --latest \
@@ -102,8 +103,8 @@ generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
    ```
 
    The release must be the latest one, not a draft or pre-release, and `appcast.xml` must be one of its assets: the app reads `https://github.com/qaws81877/sulsul/releases/latest/download/appcast.xml`, which GitHub resolves to that asset. The `Check update feed` workflow verifies this from the outside after every release change.
-4. Commit the generated `appcast.xml` as a copy of that asset; the app does not read the repository file.
-5. Update the Homebrew tap: in a clone of [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul) run `scripts/bump.sh <version>`, review the diff, then commit and push. The script downloads the published DMG to record its SHA-256, so the release has to exist first. A stale tap does not affect the in-app updater; it only delays `brew install` and `brew upgrade`.
+5. Commit the generated `appcast.xml` as a copy of that asset; the app does not read the repository file.
+6. Update the Homebrew tap: in a clone of [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul) run `scripts/bump.sh <version>`, review the diff, then commit and push. The script downloads the published DMG to record its SHA-256, so the release has to exist first. A stale tap does not affect the in-app updater; it only delays `brew install` and `brew upgrade`.
 
 ## App icon
 
