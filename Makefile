@@ -134,7 +134,7 @@ local: check setup
 		echo ""; \
 		echo "Limitations of local builds:"; \
 		echo "  - iCloud dictionary sync is off"; \
-		echo "  - Automatic updates stay off until a Sparkle key is set (see BUILDING.md)"; \
+		echo "  - Local builds carry the release Sparkle key and feed; installing a release update over one is untested"; \
 	else \
 		echo "Error: Could not find built Sulsul.app at $$APP_PATH"; \
 		exit 1; \

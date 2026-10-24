@@ -103,10 +103,14 @@ Then update the Homebrew tap, which has to follow every release. In a clone of [
 
 ## App icon
 
-The current icon is a placeholder. Replace the PNGs in:
+`scripts/generate-app-icon.swift` draws the icon and writes every file that carries it:
 
 - `VoiceInk/Assets.xcassets/AppIcon.appiconset/` (`16-mac.png` through `1024-mac.png`)
-- `VoiceInk/Assets.xcassets/menuBarIcon.imageset/`
-- `release/dmg/volume-icon.icns` and, if you change the DMG artwork, `release/dmg/background.png` and `background.tiff`
+- `VoiceInk/Assets.xcassets/menuBarIcon.imageset/menuBarIcon.png`
+- `release/dmg/volume-icon.icns` (needs `iconutil`)
 
-Keep the same pixel sizes the existing images use.
+```bash
+swift scripts/generate-app-icon.swift
+```
+
+To change the artwork, edit the script and run it again. The DMG background (`release/dmg/background.png` and `background.tiff`) is not generated; if you replace it, keep the same pixel sizes the existing images use.

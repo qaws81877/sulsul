@@ -31,8 +31,8 @@ final class UpdaterViewModel: NSObject, ObservableObject, SPUUpdaterDelegate {
         checksForUpdatesWhenDashboardAppears = Self.initialAutomaticCheckPreference(in: defaults)
         super.init()
 
-        // TODO: Updates stay off until SUPublicEDKey is replaced with this fork's Sparkle key.
-        // The feed URL already points at https://github.com/qaws81877/sulsul/releases.
+        // Sparkle stays off only while SUPublicEDKey is empty or still the placeholder.
+        // The feed is the appcast.xml asset of the latest release at github.com/qaws81877/sulsul.
         guard Self.isSparkleConfigured else {
             canCheckForUpdates = false
             return

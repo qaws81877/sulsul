@@ -29,15 +29,6 @@ Or download `Sulsul.dmg` from the [latest release](https://github.com/qaws81877/
 
 Sulsul updates itself: choose Check for Updates… in the Sulsul menu. The Homebrew cask lives in the unofficial tap [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul).
 
-## Build
-
-```bash
-make local
-open ~/Downloads/Sulsul.app
-```
-
-Details, notarization, and where to put a real app icon are in [BUILDING.md](BUILDING.md).
-
 ## Features
 
 - Local and cloud transcription
