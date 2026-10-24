@@ -15,7 +15,19 @@ Changes in this fork:
 - iCloud dictionary sync is off. It depended on the original iCloud container.
 - Onboarding can skip the transcription-model download or pick a Whisper model. It does not require Parakeet.
 
-The Xcode scheme is still named `VoiceInk`. Set your Apple Developer Team ID only in [Signing.xcconfig](Signing.xcconfig).
+The Xcode scheme is still named `VoiceInk`. Put your Apple Developer Team ID only in the git-ignored `Signing.local.xcconfig` (see [Signing.xcconfig](Signing.xcconfig)); never commit it.
+
+## Install
+
+With [Homebrew](https://brew.sh):
+
+```bash
+brew install --cask qaws81877/sulsul/sulsul
+```
+
+Or download `Sulsul.dmg` from the [latest release](https://github.com/qaws81877/sulsul/releases/latest) and drag Sulsul into Applications. The app is signed and notarized and needs macOS 15.0 or later.
+
+Sulsul updates itself: choose Check for Updates… in the Sulsul menu. The Homebrew cask lives in the unofficial tap [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul).
 
 ## Build
 
