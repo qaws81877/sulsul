@@ -2545,10 +2545,13 @@ SOFTWARE.
 ==============================================================================
 Assets inherited from VoiceInk
 ==============================================================================
-The built-in recording sounds (sound1-sound7), the app icon artwork and the browser-URL
-AppleScripts (*.scpt) are byte-identical to the files in the upstream VoiceInk repository
-(https://github.com/Beingpax/VoiceInk), which is licensed under GPL-3.0. Upstream does
-not state a separate origin or license for the sounds or the icon.
+The built-in recording sounds (sound1-sound7), the browser-URL AppleScripts (*.scpt) and
+the DMG background image are byte-identical to the files in the upstream VoiceInk
+repository (https://github.com/Beingpax/VoiceInk), which is licensed under GPL-3.0.
+Upstream does not state a separate origin or license for the sounds.
+
+The app icon, the menu bar icon and the DMG volume icon are original artwork made for
+Sulsul and are released under GPL-3.0 together with the rest of this program.
 
 ==============================================================================
 Speech models downloaded by the user (not bundled)
