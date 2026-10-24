@@ -80,12 +80,15 @@ Skip this section if you only build for yourself. Publishing needs your own Appl
 ### Once per Mac
 
 - Put `DEVELOPMENT_TEAM` in `Signing.local.xcconfig` and install a Developer ID Application certificate for that team in Keychain.
+- Install `create-dmg` (`brew install create-dmg`). `release.sh` stops without it; the other tools it needs ship with macOS and Xcode.
 - Register the Mac as a macOS device (Certificates, Identifiers & Profiles → Devices). Archiving signs with a Mac development profile first, and Apple will not create one for a team without devices. `release.sh` passes `-allowProvisioningUpdates`, so Xcode creates the App ID and profiles itself; Xcode must be signed in to that account.
 - Run `make release-setup` in a real terminal: the Apple ID and the app-specific password are read from the terminal and fail without one. The notarytool profile is named `Sulsul-Notarization`.
 - The Sparkle signing key (account `Sulsul`) lives in the login Keychain, and its public key is `SUPublicEDKey` in `VoiceInk/Info.plist`. Never replace that key: installed apps verify every update against it, and a lost private key means installed apps can never be updated again. On a new Mac, import the backed-up private key and check that the public key still matches:
 
 ```bash
-# path is under DerivedData after a package resolve
+# Sparkle's tools: release.sh looks in ~/Library/Developer/Xcode/DerivedData/VoiceInk-*/SourcePackages/
+# artifacts/sparkle/Sparkle/bin (set SPARKLE_BIN_DIR to use another folder). A `make` build also leaves a
+# copy in .build.noindex/SourcePackages/artifacts/sparkle/Sparkle/bin.
 generate_keys --account Sulsul -f <private-key-file>
 generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
 ```
@@ -94,7 +97,7 @@ generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
 
 1. Run `make test` and fix any failure first: `make release` only builds, so a failing test would not stop a release.
 2. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number is an integer greater than the last release's), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
-3. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload.
+3. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload. Options for `release.sh` go through `RELEASE_ARGS`, for example `make release NOTES=... RELEASE_ARGS=--allow-dirty` (the script refuses a dirty tree otherwise; `release.sh --help` lists the rest).
 4. Publish the DMG and the appcast from that same run folder. The appcast carries the DMG's signature and length, so if the DMG is rebuilt take both again:
 
    ```bash
