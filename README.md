@@ -1,5 +1,7 @@
 # 술술 (Sulsul)
 
+English | [한국어](README.ko.md)
+
 술술 is a modified fork of [VoiceInk](https://github.com/Beingpax/VoiceInk) by Prakash Joshi (Pax), licensed under the GNU General Public License v3.0. Original copyright notices stay in the source. This fork does not grant any trademark rights in the VoiceInk name.
 
 Upstream: https://github.com/Beingpax/VoiceInk
