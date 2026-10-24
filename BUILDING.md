@@ -13,16 +13,16 @@ The Xcode target and scheme stay named `VoiceInk` so the Swift module name does 
 
 ## Team ID
 
-The only Team ID setting is `DEVELOPMENT_TEAM` in [Signing.xcconfig](Signing.xcconfig) at the repository root.
+Your Team ID lives in `Signing.local.xcconfig` at the repository root. The file is git-ignored, so the ID is never committed. [Signing.xcconfig](Signing.xcconfig) stays committed with an empty `DEVELOPMENT_TEAM` and includes the local file when it exists.
 
 1. Open [Apple Developer membership](https://developer.apple.com/account) and copy the 10-character Team ID.
-2. Set it with no quotes:
+2. Create `Signing.local.xcconfig` with this line, with no quotes:
 
 ```
 DEVELOPMENT_TEAM = ABCDE12345
 ```
 
-`make local` passes an empty team and `LocalBuild.xcconfig`, so a day-to-day local build does not need this. `make release`, `make release-setup`, and Xcode archives read `Signing.xcconfig`. Do not put another person's Team ID in the project.
+`make local` passes an empty team and `LocalBuild.xcconfig`, so a day-to-day local build does not need this. `make release`, `make release-setup`, and Xcode archives read `Signing.local.xcconfig`, then `Signing.xcconfig`. Do not put another person's Team ID in the project, and do not put yours in `Signing.xcconfig`.
 
 ## Local build
 
@@ -60,7 +60,7 @@ Local builds keep iCloud dictionary sync off and do not check for updates. Ad-ho
 - `make dev` — build and launch `Sulsul Dev.app`
 - `make run` — launch `~/Downloads/Sulsul.app`, or the first match in DerivedData
 - `make release` — signed, notarized DMG and Sparkle appcast (after the steps below)
-- `make release-setup` — store notarization credentials; reads the Team ID from `Signing.xcconfig`
+- `make release-setup` — store notarization credentials; reads the Team ID from `Signing.local.xcconfig`
 - `make clean` — remove `~/VoiceInk-Dependencies`
 - `make help` — list commands
 
@@ -75,7 +75,7 @@ Select the `VoiceInk` scheme. Run builds `Sulsul Dev.app`. Archive uses Release 
 
 ## Notarized release
 
-1. Set `DEVELOPMENT_TEAM` in `Signing.xcconfig`.
+1. Set `DEVELOPMENT_TEAM` in `Signing.local.xcconfig`.
 2. Install a Developer ID Application certificate for that team in Keychain.
 3. `make release-setup` and enter the Apple ID. The notarytool profile name is `Sulsul-Notarization`.
 4. Resolve packages once in Xcode so Sparkle's `generate_keys` is available, then:

@@ -16,10 +16,14 @@ DMG_VOLUME_ICON="$DMG_ASSET_DIR/volume-icon.icns"
 WHISPER_FRAMEWORK="${VOICEINK_WHISPER_FRAMEWORK:-$HOME/VoiceInk-Dependencies/whisper.cpp/build-apple/whisper.xcframework}"
 
 SIGNING_XCCONFIG="$REPO_ROOT/Signing.xcconfig"
+SIGNING_LOCAL_XCCONFIG="$REPO_ROOT/Signing.local.xcconfig"
 TEAM_ID="${VOICEINK_DEVELOPMENT_TEAM:-}"
-if [[ -z "$TEAM_ID" && -f "$SIGNING_XCCONFIG" ]]; then
-    TEAM_ID="$(awk -F= '/^DEVELOPMENT_TEAM[[:space:]]*=/ { gsub(/[[:space:]]|\/\/.*/, "", $2); print $2; exit }' "$SIGNING_XCCONFIG")"
-fi
+# The git-ignored local file wins over the shared default, like the #include? in Signing.xcconfig.
+for xcconfig in "$SIGNING_LOCAL_XCCONFIG" "$SIGNING_XCCONFIG"; do
+    if [[ -z "$TEAM_ID" && -f "$xcconfig" ]]; then
+        TEAM_ID="$(awk -F= '/^DEVELOPMENT_TEAM[[:space:]]*=/ { gsub(/[[:space:]]|\/\/.*/, "", $2); print $2; exit }' "$xcconfig")"
+    fi
+done
 DEVELOPER_IDENTITY="${VOICEINK_DEVELOPER_IDENTITY:-}"
 NOTARY_PROFILE="${VOICEINK_NOTARY_PROFILE:-Sulsul-Notarization}"
 SPARKLE_ACCOUNT="${VOICEINK_SPARKLE_ACCOUNT:-Sulsul}"
@@ -53,7 +57,7 @@ Usage:
 
 Builds, signs, notarizes, packages, validates, and creates Sulsul's Appcast.
 The script never commits, pushes, tags, or creates a GitHub release.
-Team ID is read from Signing.xcconfig.
+Team ID is read from Signing.local.xcconfig, then Signing.xcconfig.
 
 Options:
   --app <Sulsul.app>          Use an existing exported app instead of archiving.
@@ -223,7 +227,7 @@ SIGN_UPDATE="$SPARKLE_BIN_DIR/sign_update"
 [[ -x "$GENERATE_KEYS" ]] || fail "Sparkle generate_keys tool not found"
 [[ -x "$SIGN_UPDATE" ]] || fail "Sparkle sign_update tool not found"
 
-[[ -n "$TEAM_ID" ]] || fail "Set DEVELOPMENT_TEAM in Signing.xcconfig before make release."
+[[ -n "$TEAM_ID" ]] || fail "Set DEVELOPMENT_TEAM in Signing.local.xcconfig before make release."
 if [[ -z "$DEVELOPER_IDENTITY" ]]; then
     DEVELOPER_IDENTITY="$(security find-identity -v -p codesigning | sed -n "s/.*\"\\(Developer ID Application: .* (${TEAM_ID})\\)\".*/\\1/p" | head -1)"
     [[ -n "$DEVELOPER_IDENTITY" ]] || fail "No Developer ID Application certificate for team ${TEAM_ID}. Install one, or set VOICEINK_DEVELOPER_IDENTITY."

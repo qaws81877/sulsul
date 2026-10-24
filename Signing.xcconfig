@@ -1,15 +1,21 @@
 // Signing.xcconfig
-// The only place to set the Apple Developer Team ID for 술술 (Sulsul).
+// Shared signing defaults for 술술 (Sulsul). Keep DEVELOPMENT_TEAM empty in this file.
+//
+// Your own Apple Developer Team ID goes in Signing.local.xcconfig next to this file.
+// That file is git-ignored, so the ID is never committed.
 //
 // 1. Open https://developer.apple.com/account → Membership details.
 // 2. Copy the 10-character Team ID.
-// 3. Set it below, with no quotes:
+// 3. Create Signing.local.xcconfig with this line, with no quotes:
 //
 //    DEVELOPMENT_TEAM = ABCDE12345
 //
 // `make local` overrides this with an empty team and ad-hoc or Apple Development
 // signing, so a local build does not need a Team ID.
 // `make release` and Xcode archives read this value. Do not put another person's
-// Team ID here.
+// Team ID in the project.
 
 DEVELOPMENT_TEAM =
+
+// Personal override. A later setting wins, so keep this line last. A missing file is fine.
+#include? "Signing.local.xcconfig"

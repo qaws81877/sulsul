@@ -5,14 +5,18 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 SIGNING_XCCONFIG="$REPO_ROOT/Signing.xcconfig"
+SIGNING_LOCAL_XCCONFIG="$REPO_ROOT/Signing.local.xcconfig"
 PROFILE_NAME="${VOICEINK_NOTARY_PROFILE:-Sulsul-Notarization}"
 TEAM_ID="${VOICEINK_DEVELOPMENT_TEAM:-}"
-if [[ -z "$TEAM_ID" && -f "$SIGNING_XCCONFIG" ]]; then
-    TEAM_ID="$(awk -F= '/^DEVELOPMENT_TEAM[[:space:]]*=/ { gsub(/[[:space:]]|\/\/.*/, "", $2); print $2; exit }' "$SIGNING_XCCONFIG")"
-fi
+# The git-ignored local file wins over the shared default, like the #include? in Signing.xcconfig.
+for xcconfig in "$SIGNING_LOCAL_XCCONFIG" "$SIGNING_XCCONFIG"; do
+    if [[ -z "$TEAM_ID" && -f "$xcconfig" ]]; then
+        TEAM_ID="$(awk -F= '/^DEVELOPMENT_TEAM[[:space:]]*=/ { gsub(/[[:space:]]|\/\/.*/, "", $2); print $2; exit }' "$xcconfig")"
+    fi
+done
 
 if [[ -z "$TEAM_ID" ]]; then
-    printf 'error: Set DEVELOPMENT_TEAM in Signing.xcconfig before make release-setup\n' >&2
+    printf 'error: Set DEVELOPMENT_TEAM in Signing.local.xcconfig before make release-setup\n' >&2
     exit 1
 fi
 
