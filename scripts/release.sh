@@ -276,6 +276,7 @@ else
             -project "$PROJECT_PATH" \
             -scheme "$SCHEME" \
             -configuration Release \
+            -allowProvisioningUpdates \
             -archivePath "$ARCHIVE_PATH"
     fi
 
@@ -283,6 +284,7 @@ else
     xcodebuild -exportArchive \
         -archivePath "$ARCHIVE_PATH" \
         -exportPath "$EXPORT_DIR" \
+        -allowProvisioningUpdates \
         -exportOptionsPlist "$EXPORT_OPTIONS"
 fi
 
