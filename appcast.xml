@@ -1,10 +1,27 @@
 <?xml version="1.0" standalone="yes"?>
 <rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
     <channel>
-        <title>술술</title>
-        <!-- TODO: scripts/release.sh replaces this file after a signed release.
-             Publish the generated appcast.xml on
-             https://github.com/qaws81877/sulsul/releases/latest/download/appcast.xml
-             Sparkle stays off until SUPublicEDKey in VoiceInk/Info.plist is a real key. -->
+        <title>Sulsul</title>
+        <item>
+            <title>5.0</title>
+            <pubDate>Sat, 24 Oct 2026 23:10:16 +0900</pubDate>
+            <sparkle:version>500</sparkle:version>
+            <sparkle:shortVersionString>5.0</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>15.0</sparkle:minimumSystemVersion>
+            <description><![CDATA[<h3>술술 5.0</h3>
+<ul>
+  <li>술술(Sulsul)로 새롭게 출발합니다. 새 앱 아이콘과 새 이름을 사용합니다</li>
+  <li>앱 안에서 직접 업데이트를 확인하고 설치할 수 있습니다</li>
+  <li>한글 받아쓰기 정리 품질을 개선하고, 정리에 실패하면 원문을 붙여 넣고 알려 줍니다</li>
+  <li>사전에 등록한 단어로 비슷한 영문 오타를 정리 전에 바로잡습니다</li>
+  <li>붙여 넣은 뒤 클립보드를 원래대로 복원하고, 붙여 넣기 후 Enter 또는 Command-Enter 전송을 선택할 수 있습니다</li>
+  <li>녹음 중에만 소리를 음소거하는 옵션을 추가했습니다 (기본값은 꺼짐)</li>
+  <li>긴 녹음은 무음 구간에서 나누어 처리합니다</li>
+  <li>claude-sonnet-5-5 모델과 모드별 추론 수준 설정을 추가했습니다</li>
+  <li>기타 버그 수정과 안정성 개선</li>
+</ul>
+]]></description>
+            <enclosure url="https://github.com/qaws81877/sulsul/releases/download/v5.0/Sulsul.dmg" length="38587181" type="application/octet-stream" sparkle:edSignature="weHYYCzHKq6aF3faBF2yrq4WgWDwyNRT879bJLBIETBAH3PurrOdEjsLYuUFfmPHrf/w0GGU+bY9HIzMH5IYCA=="/>
+        </item>
     </channel>
 </rss>
