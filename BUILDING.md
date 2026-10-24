@@ -73,13 +73,16 @@ open VoiceInk.xcodeproj
 
 Select the `VoiceInk` scheme. Run builds `Sulsul Dev.app`. Archive uses Release and produces `Sulsul.app`. `LOCAL_BUILD` applies only through `make local`.
 
-## Notarized release
+## Releasing (maintainers only)
 
-1. Set `DEVELOPMENT_TEAM` in `Signing.local.xcconfig`.
-2. Install a Developer ID Application certificate for that team in Keychain.
-3. Register the Mac you build on as a macOS device (Certificates, Identifiers & Profiles → Devices). Archiving signs with a Mac development profile first, and Apple will not create one for a team without devices. `release.sh` passes `-allowProvisioningUpdates`, so Xcode creates the App ID and profiles for `com.qaws81877.sulsul` itself, and Xcode must be signed in to that account.
-4. `make release-setup` and enter the Apple ID. The notarytool profile name is `Sulsul-Notarization`. Run it in a real terminal: the Apple ID and the app-specific password are read from the terminal and fail when the command runs without one.
-5. The Sparkle signing key (account `Sulsul`) lives in the login Keychain, and its public key is `SUPublicEDKey` in `VoiceInk/Info.plist`. Never replace that key: installed apps verify every update against it, and a lost private key means installed apps can no longer be updated. On a new Mac, import the backed-up private key and check that the public key still matches:
+Skip this section if you only build for yourself. Publishing needs your own Apple Developer ID certificate, notarization credentials, Sparkle signing key and a GitHub repository to host releases. `scripts/release.sh --help` lists every option; this section records what the script cannot check for you.
+
+### Once per Mac
+
+- Put `DEVELOPMENT_TEAM` in `Signing.local.xcconfig` and install a Developer ID Application certificate for that team in Keychain.
+- Register the Mac as a macOS device (Certificates, Identifiers & Profiles → Devices). Archiving signs with a Mac development profile first, and Apple will not create one for a team without devices. `release.sh` passes `-allowProvisioningUpdates`, so Xcode creates the App ID and profiles itself; Xcode must be signed in to that account.
+- Run `make release-setup` in a real terminal: the Apple ID and the app-specific password are read from the terminal and fail without one. The notarytool profile is named `Sulsul-Notarization`.
+- The Sparkle signing key (account `Sulsul`) lives in the login Keychain, and its public key is `SUPublicEDKey` in `VoiceInk/Info.plist`. Never replace that key: installed apps verify every update against it, and a lost private key means installed apps can never be updated again. On a new Mac, import the backed-up private key and check that the public key still matches:
 
 ```bash
 # path is under DerivedData after a package resolve
@@ -87,19 +90,20 @@ generate_keys --account Sulsul -f <private-key-file>
 generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
 ```
 
-6. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number must be an integer greater than the last release), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
-7. `make release NOTES=release-notes/<version>.html`
+### Each release
 
-The script writes a temporary export options file with your Team ID. It does not commit, tag, or upload. Publish the DMG and the appcast it generated together, because the appcast carries the DMG's signature and length; if the DMG is rebuilt, take both again from the same run:
+1. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number is an integer greater than the last release's), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
+2. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload.
+3. Publish the DMG and the appcast from that same run folder. The appcast carries the DMG's signature and length, so if the DMG is rebuilt take both again:
 
-```bash
-gh release create v<version> --repo qaws81877/sulsul --target main --latest \
-  --title "술술 <version>" --notes "<notes>" "<run folder>/Sulsul.dmg" "<run folder>/appcast.xml"
-```
+   ```bash
+   gh release create v<version> --repo qaws81877/sulsul --target main --latest \
+     --title "술술 <version>" --notes "<notes>" "<run folder>/Sulsul.dmg" "<run folder>/appcast.xml"
+   ```
 
-The release must be the latest, non-draft, non-prerelease one, and `appcast.xml` must be one of its assets. The feed URL baked into the app is `https://github.com/qaws81877/sulsul/releases/latest/download/appcast.xml`, which GitHub resolves to the latest release's asset. Commit the generated `appcast.xml` to the repository as a copy of that asset; the app does not read the repository file.
-
-Then update the Homebrew tap, which has to follow every release. In a clone of [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul) run `scripts/bump.sh <version>`, review the diff, then commit and push. The script downloads the published DMG to record its SHA-256, so the release has to exist first. A stale tap does not affect the in-app updater; it only delays `brew install` and `brew upgrade`.
+   The release must be the latest one, not a draft or pre-release, and `appcast.xml` must be one of its assets: the app reads `https://github.com/qaws81877/sulsul/releases/latest/download/appcast.xml`, which GitHub resolves to that asset. The `Check update feed` workflow verifies this from the outside after every release change.
+4. Commit the generated `appcast.xml` as a copy of that asset; the app does not read the repository file.
+5. Update the Homebrew tap: in a clone of [qaws81877/homebrew-sulsul](https://github.com/qaws81877/homebrew-sulsul) run `scripts/bump.sh <version>`, review the diff, then commit and push. The script downloads the published DMG to record its SHA-256, so the release has to exist first. A stale tap does not affect the in-app updater; it only delays `brew install` and `brew upgrade`.
 
 ## App icon
 
