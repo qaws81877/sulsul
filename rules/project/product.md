@@ -7,4 +7,5 @@ Open this before changing behavior users see, persisted data, identity, or anyth
 - Source of truth: `AGENTS.md` (structure, ANTI-PATTERNS), `README.md` / `NOTICE` (fork changes), `BUILDING.md` (builds, signing), `docs/PLAN.md` (current plan).
 - Invariants: must coexist with an installed upstream VoiceInk; API keys only in Keychain, entered by each user; no contact with upstream servers; persisted raw values and the SwiftData schema order never change. Details: `AGENTS.md` ANTI-PATTERNS.
 - Korean cleanup behavior is pinned by prompt fixtures and JSONL cases under `Tests/VoiceInkTests/`.
+- Statements about where audio or text goes live in `README.md` and `README.ko.md` (Privacy) and in the captions of `Features/Modes/Views/ModeConfigFormView.swift`; change them together. Before writing or editing one, trace the real routing in code, not only the provider list: the Korean cleanup pipeline (`KoreanCleanupPolicy.usesDefaultPipeline`) has its own provider order, an Anthropic fallback and sends no context, and `KoreanCleanupAdoption` switches cleanup on when an OpenAI or Anthropic key is added.
 - Non-goals: redistribution of VoiceInk Refine, upstream licensing/Polar.
