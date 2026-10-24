@@ -43,6 +43,16 @@ Sulsul updates itself: choose Check for Updates… in the Sulsul menu. The Homeb
 
 - macOS 15.0 or later
 
+## Privacy
+
+Sulsul has no analytics, telemetry, accounts or servers of its own, and its developer receives none of your data. Some features send data to services **you** choose, with your own API key:
+
+- **Cloud transcription:** your recorded audio goes to the provider of the model you select.
+- **AI cleanup:** the transcript and your dictionary words go to the LLM provider you select. Most prompts also send the optional context of the active mode (selected text, on by default for new modes; clipboard and text read from the current window, off by default).
+- **Korean cleanup** (the built-in Korean prompts, used with OpenAI, Anthropic or no provider chosen) sends the transcript and your dictionary words to OpenAI first, and to Anthropic too if OpenAI fails and you added an Anthropic key. With no OpenAI key, or with Anthropic selected, only Anthropic receives them. It never sends selected text, clipboard or screen context. Adding an OpenAI or Anthropic API key switches this cleanup on once for the untouched default Dictation mode.
+
+Those providers handle the data under their own terms, so check them before sending anything sensitive. Local models, and AI cleanup turned off or pointed at Ollama on your own Mac, keep everything on your Mac. Recordings, history and the dictionary are stored on your Mac, and API keys in the macOS Keychain. Update checks contact GitHub, and models you pick are downloaded from Hugging Face.
+
 ## License
 
 GNU General Public License v3.0. The full text is in [LICENSE](LICENSE).
