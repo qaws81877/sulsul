@@ -228,6 +228,14 @@ struct ModeConfigFormView: View {
                     }
                 }
 
+                if let selectedModel = availableModels.first(where: {
+                    $0.selectionKey == draft.selectedTranscriptionModelName
+                }), !selectedModel.provider.runsOnDevice {
+                    Text("Audio is sent to this model's provider to be transcribed.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 realtimeToggle
             }
 
@@ -367,6 +375,19 @@ struct ModeConfigFormView: View {
             )
 
             if draft.isAIEnhancementEnabled {
+                if KoreanCleanupPolicy.usesDefaultPipeline(
+                    promptId: draft.selectedPromptId,
+                    providerName: draft.selectedAIProvider ?? configuredSelectedAIProvider?.rawValue
+                ) {
+                    Text("Korean cleanup sends the transcript and your dictionary words to OpenAI first, and to Anthropic too if OpenAI fails and you added an Anthropic key. With no OpenAI key, or with Anthropic selected, only Anthropic receives them. Selected text, clipboard and screen context are not sent.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                } else {
+                    Text("The transcript, your dictionary words and the context you turn on are sent to the AI provider selected below.")
+                        .font(.caption)
+                        .foregroundStyle(.secondary)
+                }
+
                 let providerOptions = aiProviderOptions
 
                 if providerOptions.isEmpty {

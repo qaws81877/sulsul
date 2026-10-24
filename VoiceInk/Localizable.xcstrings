@@ -39934,6 +39934,90 @@
           }
         }
       }
+    },
+    "Audio is sent to this model's provider to be transcribed." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Audio wird zur Transkription an den Anbieter dieses Modells gesendet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "L'audio est envoyé au fournisseur de ce modèle pour être transcrit."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "音频将发送给此模型的提供商进行转写。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "오디오를 이 모델의 제공자로 보내 받아쓰기합니다."
+          }
+        }
+      }
+    },
+    "The transcript, your dictionary words and the context you turn on are sent to the AI provider selected below." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Das Transkript, Ihre Wörterbuchbegriffe und der aktivierte Kontext werden an den unten ausgewählten KI-Anbieter gesendet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "La transcription, les mots de votre dictionnaire et le contexte activé sont envoyés au fournisseur d'IA sélectionné ci-dessous."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "转写文本、您的词典词汇以及已开启的上下文将发送给下方所选的 AI 提供商。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "받아쓴 텍스트, 단어장의 단어, 켜 둔 맥락 정보가 아래에서 고른 AI 제공자로 전송됩니다."
+          }
+        }
+      }
+    },
+    "Korean cleanup sends the transcript and your dictionary words to OpenAI first, and to Anthropic too if OpenAI fails and you added an Anthropic key. With no OpenAI key, or with Anthropic selected, only Anthropic receives them. Selected text, clipboard and screen context are not sent." : {
+      "localizations" : {
+        "de" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Die Bereinigung für Koreanisch sendet das Transkript und Ihre Wörterbuchbegriffe zuerst an OpenAI und zusätzlich an Anthropic, wenn OpenAI fehlschlägt und Sie einen Anthropic-Schlüssel hinzugefügt haben. Ohne OpenAI-Schlüssel oder bei gewähltem Anthropic erhält nur Anthropic sie. Ausgewählter Text, Zwischenablage und Bildschirmkontext werden nicht gesendet."
+          }
+        },
+        "fr" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "Le nettoyage coréen envoie la transcription et les mots de votre dictionnaire d'abord à OpenAI, puis aussi à Anthropic si OpenAI échoue et que vous avez ajouté une clé Anthropic. Sans clé OpenAI, ou si Anthropic est sélectionné, seul Anthropic les reçoit. Le texte sélectionné, le presse-papiers et le contexte d'écran ne sont pas envoyés."
+          }
+        },
+        "zh-Hans" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "韩语整理会先将转写文本和您的词典词汇发送给 OpenAI；如果 OpenAI 失败且您已添加 Anthropic 密钥，也会发送给 Anthropic。没有 OpenAI 密钥或选择了 Anthropic 时，只发送给 Anthropic。所选文本、剪贴板和屏幕上下文不会被发送。"
+          }
+        },
+        "ko" : {
+          "stringUnit" : {
+            "state" : "translated",
+            "value" : "한국어 정리는 받아쓴 텍스트와 단어장의 단어를 먼저 OpenAI로 보내고, OpenAI가 실패했는데 Anthropic 키를 넣어 두었다면 Anthropic에도 보냅니다. OpenAI 키가 없거나 Anthropic을 골랐다면 Anthropic에만 보냅니다. 선택한 텍스트, 클립보드, 화면 맥락은 보내지 않습니다."
+          }
+        }
+      }
     }
   },
   "version" : "1.1"

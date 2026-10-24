@@ -200,11 +200,16 @@ enum KoreanCleanupPolicy {
     /// A built-in Korean prompt with OpenAI, Anthropic, or no provider runs on the cleanup pipeline,
     /// whichever model of those providers the mode selected.
     static func usesDefaultPipeline(_ configuration: EnhancementRuntimeConfiguration) -> Bool {
-        guard let promptId = configuration.prompt?.id, pipelinePromptIds.contains(promptId) else {
+        usesDefaultPipeline(
+            promptId: configuration.prompt?.id,
+            providerName: configuration.mode?.selectedAIProvider ?? configuration.provider?.rawValue
+        )
+    }
+
+    static func usesDefaultPipeline(promptId: UUID?, providerName: String?) -> Bool {
+        guard let promptId, pipelinePromptIds.contains(promptId) else {
             return false
         }
-
-        let providerName = configuration.mode?.selectedAIProvider ?? configuration.provider?.rawValue
         return isPipelineProvider(providerName)
     }
 
