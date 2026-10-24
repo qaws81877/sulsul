@@ -104,3 +104,27 @@ Icon
 Network Trash Folder
 Temporary Items
 .apdisk
+
+# Local signing: your own Team ID lives here, never in Signing.xcconfig
+Signing.local.xcconfig
+
+# Signing material and secrets
+*.p12
+*.p8
+*.cer
+*.certSigningRequest
+*.mobileprovision
+.env
+.env.*
+
+# Release outputs (make release writes outside the repo by default)
+*.dmg
+*.xcarchive
+
+# Python bytecode (scripts/*.py)
+__pycache__/
+*.pyc
+
+# Local agent and editor files, not shared
+.cursor/
+/GLOSSARY.md
