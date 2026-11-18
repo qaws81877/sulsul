@@ -4,7 +4,21 @@
 
 ## Pull requests
 
-This repository does not accept pull requests for now. You are welcome to fork it under the terms of the [GPL-3.0](LICENSE).
+Pull requests are welcome.
+
+- Bug fixes and small improvements can go straight to a pull request.
+- For a new feature or a larger change, open an issue first so we can agree on the approach.
+- Run `make` and `make test` and say in the pull request which ones you ran. A green build does not show that recording, paste or macOS permissions work, so also say what you tried in the app.
+- Contributions are licensed under the [GPL-3.0](LICENSE), the license of this project.
+
+This fork has a few rules a pull request must keep:
+
+- It must run side by side with an installed VoiceInk: do not reuse VoiceInk's bundle ID, data folder, Keychain service or defaults domain.
+- API keys stay in the Keychain and are entered by each user. Never commit a key, a Team ID (it goes in the git-ignored `Signing.local.xcconfig`) or a signing file.
+- Do not add contact with upstream VoiceInk servers.
+- Do not reorder the SwiftData schema or rename saved values and `UserDefaults` keys; existing users' data depends on them.
+- Leave `project.pbxproj` alone when adding files; the project picks up new files automatically.
+- Release files (`appcast.xml`, `scripts/release.sh`, signing settings) are changed only by the maintainer.
 
 ## Issues
 
