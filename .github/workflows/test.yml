@@ -1,0 +1,55 @@
+name: Build and test
+
+# Runs `make test` (Debug build of scheme VoiceInk, ad-hoc signed, VoiceInkTests) on a macOS runner.
+# `make release` does not run tests, so this is the check that catches a broken build before a release.
+# It does not exercise microphone capture, paste or macOS permissions.
+
+on:
+  pull_request:
+    paths-ignore:
+      - "**.md"
+      - "release-notes/**"
+      - "appcast.xml"
+      - ".github/ISSUE_TEMPLATE/**"
+  push:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "release-notes/**"
+      - "appcast.xml"
+      - ".github/ISSUE_TEMPLATE/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: test-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  test:
+    runs-on: macos-26
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Select the newest installed Xcode
+        run: |
+          XCODE_APP=$(ls -d /Applications/Xcode_*.app | sort -V | tail -1)
+          sudo xcode-select -s "$XCODE_APP/Contents/Developer"
+          xcodebuild -version
+
+      - name: Read the pinned whisper.cpp commit
+        id: whisper
+        run: echo "commit=$(awk -F':= ' '/^WHISPER_CPP_COMMIT/ { print $2 }' Makefile)" >> "$GITHUB_OUTPUT"
+
+      # Building whisper.xcframework takes a long time; reuse it until the pin changes.
+      - name: Cache whisper.cpp
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/VoiceInk-Dependencies/whisper.cpp
+          key: whisper-${{ runner.os }}-${{ runner.arch }}-${{ steps.whisper.outputs.commit }}
+
+      - name: Build and run unit tests
+        run: make test
