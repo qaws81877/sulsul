@@ -1,22 +1,21 @@
 ---
 name: Feature request
-about: Suggest an idea for this project
+about: Suggest an idea for 술술 (Sulsul)
 title: ''
 labels: enhancement
 assignees: ''
 
 ---
 
-## ✨ Feature Request
+## Feature request
 
-### **Describe the feature you'd like**
-A clear and concise description of the feature you want.
+### What you would like
 
-### **Problem it solves**
-What problem does this feature solve? What use case does it address?
+### Problem it solves
+What use case does this address?
 
-### **Proposed solution**
-Describe how you think this should work.
+### Proposed solution
+How you think it should work.
 
-### **Additional context**
-Any additional context, screenshots, or examples that help explain the feature request.
+### Additional context
+Screenshots, examples, or other apps that do this well.

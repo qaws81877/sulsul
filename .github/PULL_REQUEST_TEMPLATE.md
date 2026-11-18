@@ -1,20 +1,8 @@
-# ⚠️ This Project Does Not Accept Pull Requests
+# This repository does not accept pull requests
 
-Thank you for your interest in contributing to VoiceInk!
+술술 (Sulsul) is a personal fork of VoiceInk. Please close this pull request.
 
-However, **this project is not currently accepting pull requests.**
+- Report bugs or suggest features in an [issue](../../issues).
+- You are welcome to fork the project under the GPL-3.0.
 
-## Please close this PR
-
-## Alternative ways to contribute:
-
-- 🐛 **Report bugs**: Open an [issue](../../issues) with detailed information
-- 💡 **Suggest features**: Share your ideas via [issues](../../issues) or [discussions](../../discussions)
-- 🍴 **Fork the project**: You're welcome to create and maintain your own fork
-- 📖 **Improve documentation**: Suggest corrections or clarifications via issues
-
-Thank you for understanding, and I appreciate your interest in VoiceInk!
-
----
-
-For more information, see [CONTRIBUTING.md](../CONTRIBUTING.md)
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
