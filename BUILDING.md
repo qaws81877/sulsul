@@ -55,7 +55,7 @@ Local builds keep iCloud dictionary sync off. They carry the same Sparkle key an
 ## Other commands
 
 - `make check` — verify required tools
-- `make whisper` — prepare `whisper.xcframework`
+- `make whisper` — prepare `whisper.xcframework` from the whisper.cpp tag pinned in the Makefile (`WHISPER_CPP_TAG`)
 - `make build` — Debug build (`Sulsul Dev.app`)
 - `make dev` — build and launch `Sulsul Dev.app`
 - `make run` — launch `~/Downloads/Sulsul.app`, or the first match in DerivedData
