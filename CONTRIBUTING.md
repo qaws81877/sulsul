@@ -1,78 +1,37 @@
-# Contributing to VoiceInk
+# Contributing to 술술 (Sulsul)
 
-First off, thank you for considering contributing to VoiceInk! It's people like you that make VoiceInk such a great tool.
+술술 is a personal fork of [VoiceInk](https://github.com/Beingpax/VoiceInk) used by a small group of people. See [README.md](README.md) and [NOTICE](NOTICE) for what this fork changes.
 
-## ⚠️ Pull Requests Not Accepted
+## Pull requests
 
-**As of now, this project is not accepting pull requests.** VoiceInk is open source, and you're welcome to fork and modify it for your own use.
+Pull requests are welcome.
 
-**You can still contribute by:**
-- 🐛 **Reporting bugs** - Open an issue with detailed information
-- 💡 **Suggesting features** - Share your ideas via issues or discussions
-- 🍴 **Forking the project** - Feel free to create your own version
-- 📖 **Improving documentation** - Suggest clarifications or corrections via issues
+- Bug fixes and small improvements can go straight to a pull request.
+- For a new feature or a larger change, open an issue first so we can agree on the approach.
+- Run `make` and `make test` and say in the pull request which ones you ran. A green build does not show that recording, paste or macOS permissions work, so also say what you tried in the app.
+- Contributions are licensed under the [GPL-3.0](LICENSE), the license of this project.
 
-Thank you for understanding!
+This fork has a few rules a pull request must keep:
 
-## Code of Conduct
+- It must run side by side with an installed VoiceInk: do not reuse VoiceInk's bundle ID, data folder, Keychain service or defaults domain.
+- API keys stay in the Keychain and are entered by each user. Never commit a key, a Team ID (it goes in the git-ignored `Signing.local.xcconfig`) or a signing file.
+- Do not add contact with upstream VoiceInk servers.
+- Do not reorder the SwiftData schema or rename saved values and `UserDefaults` keys; existing users' data depends on them.
+- Leave `project.pbxproj` alone when adding files; the project picks up new files automatically.
+- Release files (`appcast.xml`, `scripts/release.sh`, signing settings) are changed only by the maintainer.
 
-By participating in this project, you agree to abide by our [Code of Conduct](CODE_OF_CONDUCT.md).
+## Issues
 
-## How Can I Contribute?
+Bug reports and feature ideas are welcome as [issues](https://github.com/qaws81877/sulsul/issues). Use the templates.
 
-### Reporting Bugs
+- Report problems with 술술 here, not in the upstream VoiceInk repository.
+- Report a VoiceInk problem that also happens in an unmodified VoiceInk build to [upstream](https://github.com/Beingpax/VoiceInk/issues).
+- Never paste an API key, a recording you do not want to share, or private dictated text into an issue. The repository is public.
 
-- Before submitting a bug report, please check if the issue has already been reported
-- Use the bug report template when creating an issue
-- Include as much relevant information as possible
-- Include steps to reproduce the issue
+## Building
 
-### Suggesting Enhancements
+[BUILDING.md](BUILDING.md) covers requirements (macOS 15+, Xcode, Apple silicon), `make local`, `make test`, and signing.
 
-- Open an issue using the feature request template
-- Clearly describe the feature and its benefits
-- Discuss potential implementation approaches
-- Consider the feature's impact on existing functionality
+## Code of conduct
 
-### Development Process
-
-1. Ensure you have all the requirements installed:
-   - macOS 15.0 or later
-   - Latest version of Xcode
-   - Latest version of Swift
-   - whisper.cpp properly set up
-
-2. Follow our coding standards:
-   - Use Swift style guidelines
-   - Write meaningful commit messages
-   - Include comments where necessary
-   - Add tests for new features
-
-3. Testing:
-   - Run existing tests
-   - Add new tests for new functionality
-   - Ensure all tests pass before submitting PR
-
-## Style Guidelines
-
-- Follow Swift style guidelines
-- Use meaningful variable and function names
-- Keep functions focused and concise
-- Comment complex logic
-- Write self-documenting code where possible
-
-## Community
-
-- Join our discussions
-- Help other contributors
-- Share your ideas
-- Be respectful and constructive
-
-## Questions?
-
-If you have any questions or need clarification, feel free to:
-1. Open an issue
-2. Start a discussion
-3. Reach out to the maintainers
-
-Thank you for contributing to VoiceInk! 🎉 
+By taking part you agree to the [Code of Conduct](CODE_OF_CONDUCT.md).

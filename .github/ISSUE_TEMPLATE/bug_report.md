@@ -1,58 +1,43 @@
 ---
 name: Bug report
-about: Create a report to help us improve
+about: Report a problem with 술술 (Sulsul)
 title: ''
 labels: bug
-assignees: Beingpax
+assignees: ''
 
 ---
 
-## 🐛 Bug Report
+## Bug report
 
-### **Describe the bug**
-A clear and concise description of what the bug is.
+> This repository is public. Do not paste API keys or private dictated text.
 
-### **To Reproduce**
-Describe how to reproduce the issue. 
+### What happened
+A clear description of the bug.
 
-### **Expected behavior**
-A clear and concise description of what you expected to happen.
+### How to reproduce
+1.
+2.
+3.
 
-### **Screenshots**
-If applicable, add screenshots to help explain your problem.
+### What you expected
 
-> **📋 IMPORTANT: System Information**
->
-> Copy the system information from VoiceInk's **Dashboard tab** (there's a copy button 📋 next to the "Feedback or Issues?" button) and paste it here. This includes all technical details needed for debugging.
-
-```
-Paste the copied system information here (includes VoiceInk version, macOS version, hardware specs, transcription settings, and all configuration details)
-```
-
-### **Logs and Error Messages**
-Include any error messages, logs, or crash reports (upload large crash files as attachments):
+### System information
+In 술술, open **Dashboard** and click **Copy System Info** (시스템 정보 복사), then paste it here. It includes the app version, macOS version, hardware, and transcription settings.
 
 ```
-Paste error messages or logs here
+Paste the system information here
 ```
 
-### **Additional Context**
-- **Frequency**: [e.g., Happens every time, Intermittent, Only once]
-- **Impact**: [e.g., Prevents transcription, Affects accuracy, UI issue, Performance problem]
-- **Workarounds**: [Any temporary solutions you've found]
-- **Recent Changes**: [Any recent macOS updates, VoiceInk updates, or system changes]
+### Logs
+If you can, open **Settings > Diagnostics** (설정 > 진단), click **Export Logs** (로그 내보내기), and attach the file. Check it for private text before attaching.
 
-### **VoiceInk Debug Information**
-If possible, include:
-- VoiceInk app logs (found in Console.app under VoiceInk)
-- Any relevant entries from system logs
-- Screenshot of VoiceInk settings/preferences
+### Additional context
+- **Install method**: Homebrew / DMG / built from source
+- **Frequency**: every time, sometimes, once
+- **Transcription model and AI cleanup provider**:
+- **Recent changes**: macOS update, 술술 update, new settings
 
 ---
 
-**Before submitting:**
-- [ ] I have checked existing issues to avoid duplicates
-- [ ] I have tried restarting VoiceInk and my Mac
-- [ ] I have included all relevant environment and configuration details
-
-Thank you for helping make VoiceInk better! 🙏
+- [ ] I searched existing issues for duplicates
+- [ ] I tried quitting and reopening 술술

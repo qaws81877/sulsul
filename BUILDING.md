@@ -55,7 +55,7 @@ Local builds keep iCloud dictionary sync off. They carry the same Sparkle key an
 ## Other commands
 
 - `make check` — verify required tools
-- `make whisper` — prepare `whisper.xcframework`
+- `make whisper` — prepare `whisper.xcframework` from the whisper.cpp tag pinned in the Makefile (`WHISPER_CPP_TAG`)
 - `make build` — Debug build (`Sulsul Dev.app`)
 - `make dev` — build and launch `Sulsul Dev.app`
 - `make run` — launch `~/Downloads/Sulsul.app`, or the first match in DerivedData
@@ -95,7 +95,7 @@ generate_keys --account Sulsul -p   # must equal SUPublicEDKey in Info.plist
 
 ### Each release
 
-1. Run `make test` and fix any failure first: `make release` only builds, so a failing test would not stop a release.
+1. Run `make test` and fix any failure first: `make release` only builds, so a failing test would not stop a release. The `Build and test` workflow runs the same target on every pull request and push to `main`; check that it is green on the commit you release.
 2. Raise `MARKETING_VERSION` and `CURRENT_PROJECT_VERSION` (the build number is an integer greater than the last release's), add `release-notes/<version>.html`, and commit. The script refuses a dirty tree unless `--allow-dirty` is passed.
 3. `make release NOTES=release-notes/<version>.html` builds, signs, notarizes and writes `Sulsul.dmg` and `appcast.xml` into one run folder. It does not commit, tag, or upload. Options for `release.sh` go through `RELEASE_ARGS`, for example `make release NOTES=... RELEASE_ARGS=--allow-dirty` (the script refuses a dirty tree otherwise; `release.sh --help` lists the rest).
 4. Publish the DMG and the appcast from that same run folder. The appcast carries the DMG's signature and length, so if the DMG is rebuilt take both again:

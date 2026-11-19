@@ -1,6 +1,12 @@
 # Define a directory for dependencies in the user's home folder
 DEPS_DIR := $(HOME)/VoiceInk-Dependencies
 WHISPER_CPP_DIR := $(DEPS_DIR)/whisper.cpp
+# whisper.cpp is pinned so every Mac and CI build the same framework.
+# To upgrade: change the tag and commit together, delete $(WHISPER_CPP_DIR)/build-apple,
+# then run `make whisper` and `make test`.
+WHISPER_CPP_REPO := https://github.com/ggml-org/whisper.cpp.git
+WHISPER_CPP_TAG := v1.9.5
+WHISPER_CPP_COMMIT := d1be6fde11ac6e0407606b4e42fe72d34add8037
 FRAMEWORK_PATH := $(WHISPER_CPP_DIR)/build-apple/whisper.xcframework
 # The .noindex suffix keeps Spotlight from listing every built copy of the app.
 LOCAL_DERIVED_DATA := $(CURDIR)/.local-build.noindex
@@ -69,15 +75,22 @@ healthcheck: check
 whisper:
 	@mkdir -p $(DEPS_DIR)
 	@if [ ! -d "$(FRAMEWORK_PATH)" ]; then \
-		echo "Building whisper.xcframework in $(DEPS_DIR)..."; \
+		echo "Building whisper.xcframework $(WHISPER_CPP_TAG) in $(DEPS_DIR)..."; \
 		if [ ! -d "$(WHISPER_CPP_DIR)" ]; then \
-			git clone https://github.com/ggerganov/whisper.cpp.git $(WHISPER_CPP_DIR); \
-		else \
-			(cd $(WHISPER_CPP_DIR) && git pull); \
+			git clone $(WHISPER_CPP_REPO) "$(WHISPER_CPP_DIR)" || exit 1; \
 		fi; \
-		cd $(WHISPER_CPP_DIR) && ./build-xcframework.sh; \
+		cd "$(WHISPER_CPP_DIR)" && \
+		git fetch --tags origin && \
+		git -c advice.detachedHead=false checkout --quiet $(WHISPER_CPP_COMMIT) && \
+		./build-xcframework.sh; \
 	else \
-		echo "whisper.xcframework already built in $(DEPS_DIR), skipping build"; \
+		HEAD_COMMIT=$$(git -C "$(WHISPER_CPP_DIR)" rev-parse HEAD 2>/dev/null); \
+		if [ "$$HEAD_COMMIT" = "$(WHISPER_CPP_COMMIT)" ]; then \
+			echo "whisper.xcframework $(WHISPER_CPP_TAG) already built in $(DEPS_DIR), skipping build"; \
+		else \
+			echo "WARNING: whisper.cpp checkout is at $${HEAD_COMMIT:-unknown}, not $(WHISPER_CPP_TAG) ($(WHISPER_CPP_COMMIT))."; \
+			echo "WARNING: using the existing whisper.xcframework. Delete $(WHISPER_CPP_DIR)/build-apple and run 'make whisper' to build the pinned version."; \
+		fi; \
 	fi
 
 setup: whisper
@@ -180,7 +193,7 @@ clean:
 help:
 	@echo "Available targets:"
 	@echo "  check/healthcheck  Check if required CLI tools are installed"
-	@echo "  whisper            Clone and build whisper.cpp XCFramework"
+	@echo "  whisper            Clone and build the pinned whisper.cpp XCFramework ($(WHISPER_CPP_TAG))"
 	@echo "  setup              Prepare whisper.xcframework for the Sulsul project"
 	@echo "  build              Build the Xcode project (scheme VoiceInk, product Sulsul Dev)"
 	@echo "  test               Run VoiceInkTests (ad-hoc signed)"

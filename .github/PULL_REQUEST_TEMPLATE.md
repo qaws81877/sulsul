@@ -1,20 +1,17 @@
-# ⚠️ This Project Does Not Accept Pull Requests
+## What this changes
+<!-- One or two sentences. Link the issue, for example "Fixes #12". -->
 
-Thank you for your interest in contributing to VoiceInk!
+## Why
 
-However, **this project is not currently accepting pull requests.**
+## How I checked it
+- [ ] `make` builds
+- [ ] `make test` passes (or: not run, because …)
+- [ ] Tried in the app: <!-- what you did and saw; say what you could not try (recording, paste, permissions) -->
 
-## Please close this PR
+## Checklist
+- [ ] No API keys, Team ID, or signing files in the diff
+- [ ] Still runs next to an installed VoiceInk (no reused VoiceInk identifiers) and adds no contact with upstream servers
+- [ ] Saved data stays compatible (SwiftData schema order, saved values and `UserDefaults` keys unchanged)
+- [ ] User-facing text added to `Localizable.xcstrings`
 
-## Alternative ways to contribute:
-
-- 🐛 **Report bugs**: Open an [issue](../../issues) with detailed information
-- 💡 **Suggest features**: Share your ideas via [issues](../../issues) or [discussions](../../discussions)
-- 🍴 **Fork the project**: You're welcome to create and maintain your own fork
-- 📖 **Improve documentation**: Suggest corrections or clarifications via issues
-
-Thank you for understanding, and I appreciate your interest in VoiceInk!
-
----
-
-For more information, see [CONTRIBUTING.md](../CONTRIBUTING.md)
+See [CONTRIBUTING.md](../CONTRIBUTING.md).
