@@ -18,7 +18,9 @@ class WhisperPrompt: ObservableObject {
         "hi": "नमस्ते, कैसे हैं आप? आपसे मिलकर अच्छा लगा।",
         "bn": "নমস্কার, কেমন আছেন? আপনার সাথে দেখা হয়ে ভালো লাগলো।",
         "ja": "こんにちは、お元気ですか？お会いできて嬉しいです。",
-        "ko": "안녕하세요, 잘 지내시나요? 만나서 반갑습니다.",
+        // A noun phrase, not a greeting. A 존댓말 sentence makes Whisper continue
+        // that register or add "감사합니다". A 반말 sentence would push the other way.
+        "ko": "회의 일정, 사람 이름, 숫자, 제품명.",
         "zh": "你好，最近好吗？见到你很高兴。",
         "th": "สวัสดีครับ/ค่ะ, สบายดีไหม? ยินดีที่ได้พบคุณ",
         "vi": "Xin chào, bạn khỏe không? Rất vui được gặp bạn.",

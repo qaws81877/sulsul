@@ -4,7 +4,8 @@ import os
 /// Streams the default Korean cleanup call.
 /// OpenAI (the mode's model, `gpt-6-luna` by default) is primary and Anthropic `claude-haiku-5-5`
 /// is the fallback. When the mode selects Anthropic, only the mode's Anthropic model is called.
-/// Both attempts share the `anthropicOverall` deadline. If no provider produces complete text,
+/// The fallback gets its own budget, at least `KoreanCleanupBudget.fallbackMinimum`, without
+/// the two calls together passing `overallCap`. If no provider produces complete text,
 /// this throws so the caller pastes the raw transcript with a warning; a cancelled task throws
 /// `CancellationError` without falling back.
 enum KoreanCleanupClient {
@@ -19,11 +20,17 @@ enum KoreanCleanupClient {
         anthropicEffort: AnthropicEffort? = nil
     ) async throws -> String {
         let keys = credentials.keys
-        let budget = KoreanCleanupBudget.forTranscript(transcript)
         let models = KoreanCleanupPolicy.models(
             selectedProvider: selectedProvider,
             selectedModel: selectedModel,
             anthropicEffort: anthropicEffort
+        )
+        let budget = KoreanCleanupBudget.forTranscript(
+            transcript,
+            anthropicEffort: KoreanCleanupBudget.anthropicEffort(
+                model: models.anthropic,
+                selected: models.anthropicEffort
+            )
         )
         switch KoreanCleanupPolicy.route(keys: keys, selectedProvider: selectedProvider) {
         case .pasteTranscript:
