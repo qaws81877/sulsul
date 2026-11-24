@@ -224,9 +224,9 @@ class AIEnhancementService: ObservableObject {
                 openAI: APIKeyManager.shared.getAPIKey(forProvider: AIProvider.openAI.rawValue),
                 anthropic: APIKeyManager.shared.getAPIKey(forProvider: AIProvider.anthropic.rawValue)
             )
-            let cleaned: String
+            let modelText: String
             do {
-                cleaned = try await KoreanCleanupClient.clean(
+                modelText = try await KoreanCleanupClient.clean(
                     transcript: text,
                     systemPrompt: systemPrompt,
                     credentials: credentials,
@@ -237,6 +237,9 @@ class AIEnhancementService: ObservableObject {
             } catch let reason as KoreanCleanupFallbackReason {
                 throw KoreanCleanupPolicy.enhancementError(for: reason)
             }
+            let cleaned = prompt.id == PromptTemplates.organizePromptId
+                ? KoreanOrganizePrompt.applyingHeadingRule(transcript: text, output: modelText)
+                : modelText
             return (
                 cleaned,
                 systemPrompt,

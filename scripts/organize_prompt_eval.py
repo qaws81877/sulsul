@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import urllib.error
 import urllib.request
@@ -22,6 +23,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 CASES_PATH = ROOT / "scripts" / "organize_eval_cases.jsonl"
 PROMPT_PATH = ROOT / "Tests" / "VoiceInkTests" / "prompt_ko_organize_v1.txt"
+PROMPT_SOURCE = ROOT / "VoiceInk/Features/Enhancement/KoreanCleanup/KoreanOrganizePrompt.swift"
 
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
@@ -143,6 +145,49 @@ def call_anthropic(prompt, transcript, api_key):
     return "".join(parts)
 
 
+def heading_character_threshold():
+    """The same limit as KoreanOrganizePrompt.headingCharacterThreshold."""
+    source = PROMPT_SOURCE.read_text(encoding="utf-8")
+    match = re.search(r"static let headingCharacterThreshold = (\d+)", source)
+    if not match:
+        raise SystemExit("프롬프트 소스에서 headingCharacterThreshold 를 찾지 못했다.")
+    return int(match.group(1))
+
+
+def is_markdown_heading_line(line):
+    trimmed = line.strip()
+    hashes = 0
+    for character in trimmed:
+        if character == "#":
+            hashes += 1
+        else:
+            break
+    return 1 <= hashes <= 6
+
+
+def apply_heading_rule(transcript, output, threshold):
+    """Match KoreanOrganizePrompt.applyingHeadingRule."""
+    if len(transcript) >= threshold:
+        return output
+    lines = output.split("\n")
+    if not any(is_markdown_heading_line(line) for line in lines):
+        return output
+    kept = []
+    pending_blank = None
+    for line in lines:
+        if is_markdown_heading_line(line):
+            continue
+        if line.strip() == "":
+            if kept and pending_blank is None:
+                pending_blank = line
+            continue
+        if pending_blank is not None:
+            kept.append(pending_blank)
+            pending_blank = None
+        kept.append(line)
+    return "\n".join(kept)
+
+
 def masked(text, allowed):
     cleaned = text
     for phrase in allowed:
@@ -196,6 +241,10 @@ def main():
     if "더 많이 쓴 쪽으로" in prompt:
         print("프롬프트 파일이 옛 정리 규칙이다.")
         return 1
+    threshold = heading_character_threshold()
+    if f"{threshold}자 미만이면" not in prompt:
+        print("프롬프트 파일의 글자 수 기준이 소스 상수와 다르다.")
+        return 1
 
     openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     anthropic_key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
@@ -218,7 +267,7 @@ def main():
         print(f"== {model_name} ==")
         for case in cases:
             try:
-                output = call(case["input"]).strip()
+                output = apply_heading_rule(case["input"], call(case["input"]).strip(), threshold)
                 problems = judge(case, output)
             except urllib.error.HTTPError as error:
                 detail = error.read().decode("utf-8", errors="replace")[:500]

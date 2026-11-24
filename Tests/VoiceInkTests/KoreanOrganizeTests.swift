@@ -230,6 +230,59 @@ final class KoreanOrganizeTests: XCTestCase {
         XCTAssertEqual(template.promptId, PromptTemplates.organizePromptId)
     }
 
+    func testShortOrganizeOutputDropsHeadingsAndKeepsTheOtherLines() {
+        let transcript = String(repeating: "가", count: KoreanOrganizePrompt.headingCharacterThreshold - 1)
+        let output = """
+        ### 이사
+
+        - 토요일에 와
+        # 한 줄
+        - 7층
+
+
+          ## 들여쓴 제목
+        ###### 마지막
+        ####### 해시가 일곱이면 제목이 아니다
+        고양이는 내가 데려간다.
+        """
+        XCTAssertEqual(
+            KoreanOrganizePrompt.applyingHeadingRule(transcript: transcript, output: output),
+            """
+            - 토요일에 와
+            - 7층
+
+            ####### 해시가 일곱이면 제목이 아니다
+            고양이는 내가 데려간다.
+            """
+        )
+    }
+
+    func testOrganizeOutputAtTheThresholdKeepsHeadings() {
+        let transcript = String(repeating: "가", count: KoreanOrganizePrompt.headingCharacterThreshold)
+        let output = "### 배포\n- QA는 목요일\n"
+        XCTAssertEqual(
+            KoreanOrganizePrompt.applyingHeadingRule(transcript: transcript, output: output),
+            output
+        )
+        let longer = String(repeating: "나", count: KoreanOrganizePrompt.headingCharacterThreshold + 40)
+        XCTAssertEqual(
+            KoreanOrganizePrompt.applyingHeadingRule(transcript: longer, output: output),
+            output
+        )
+    }
+
+    func testOrganizeOutputWithoutHeadingsStaysUnchanged() {
+        let transcript = "내일 세 시에 보자"
+        let output = "내일 3시에 보자.\n\n슬랙에 올렸어.  \n"
+        XCTAssertEqual(
+            KoreanOrganizePrompt.applyingHeadingRule(transcript: transcript, output: output),
+            output
+        )
+        XCTAssertLessThan(transcript.count, KoreanOrganizePrompt.headingCharacterThreshold)
+        XCTAssertEqual(KoreanOrganizePrompt.headingCharacterThreshold, 700)
+        XCTAssertTrue(KoreanOrganizePrompt.text.contains("\(KoreanOrganizePrompt.headingCharacterThreshold)자 미만이면"))
+    }
+
     func testOrganizePromptStatesTheRegisterAndLengthRules() {
         let prompt = KoreanOrganizePrompt.text
         XCTAssertTrue(prompt.contains("확인해 주세요라고 하자"))
