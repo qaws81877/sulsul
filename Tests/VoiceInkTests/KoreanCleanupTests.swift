@@ -281,6 +281,22 @@ final class KoreanCleanupTests: XCTestCase {
             KoreanCleanupPromptMigration.legacyUnmodifiedOrganizePromptText.contains("더 많이 쓴 쪽으로 맞춰라")
         )
         XCTAssertFalse(KoreanOrganizePrompt.text.contains("더 많이 쓴 쪽으로 맞춰라"))
+
+        let previous = CustomPrompt(
+            id: PromptTemplates.organizePromptId,
+            title: "Organize",
+            promptText: KoreanCleanupPromptMigration.legacyBulletOrganizePromptText,
+            useSystemInstructions: false
+        )
+        let migratedPrevious = KoreanCleanupPromptMigration.migrate([previous])
+        XCTAssertEqual(migratedPrevious[0].promptText, KoreanOrganizePrompt.text)
+        XCTAssertNotEqual(
+            KoreanCleanupPromptMigration.legacyBulletOrganizePromptText,
+            KoreanOrganizePrompt.text
+        )
+        XCTAssertFalse(
+            KoreanCleanupPromptMigration.legacyBulletOrganizePromptText.contains("템플릿만 만들어")
+        )
     }
 
     func testDefaultSeedIsTheFrozenPrompt() throws {

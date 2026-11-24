@@ -236,6 +236,9 @@ final class KoreanOrganizeTests: XCTestCase {
         XCTAssertTrue(prompt.contains("상태입니다"))
         XCTAssertTrue(prompt.contains("### 주제"))
         XCTAssertTrue(prompt.contains("오늘 저녁에 시간 돼?"))
+        XCTAssertTrue(prompt.contains("700자 미만이면"))
+        XCTAssertTrue(prompt.contains("템플릿만 만들어"))
+        XCTAssertTrue(prompt.contains("슬랙"))
         XCTAssertFalse(prompt.contains("마크다운은 쓰지 마라"))
         XCTAssertFalse(prompt.contains("더 많이 쓴 쪽으로"))
     }
