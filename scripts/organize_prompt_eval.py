@@ -204,6 +204,71 @@ def masked(text, allowed):
     return cleaned
 
 
+# Verb endings attach to a stem, so they count at the end of a word
+# ("하겠습니다", "상태입니다"). Free words count only when they start a word,
+# so "결제가" is not "제가" and "최저의" is not "저의".
+ENDING_TERMS = frozenset(
+    {
+        "습니다",
+        "습니까",
+        "입니다",
+        "입니까",
+        "십시오",
+        "세요",
+        "해요",
+        "예요",
+        "에요",
+    }
+)
+
+
+def is_token_boundary(char):
+    if char is None or char.isspace():
+        return True
+    code = ord(char)
+    if 0xAC00 <= code <= 0xD7A3:
+        return False
+    if 0x1100 <= code <= 0x11FF or 0x3130 <= code <= 0x318F:
+        return False
+    if char.isalnum():
+        return False
+    return True
+
+
+def is_hangul_syllable(char):
+    return char is not None and 0xAC00 <= ord(char) <= 0xD7A3
+
+
+def contains_forbidden_term(text, term):
+    """True when `term` is its own token, not a piece of a longer word.
+
+    Endings such as 습니다 match at the end of a word. Other terms match only
+    when they start a word, so a following Hangul particle still counts
+    ("고객님께") but extra Latin letters do not ("Slackware").
+    """
+    if not term:
+        return False
+    ending = term in ENDING_TERMS
+    start = 0
+    while True:
+        index = text.find(term, start)
+        if index < 0:
+            return False
+        before = text[index - 1] if index else None
+        after_index = index + len(term)
+        after = text[after_index] if after_index < len(text) else None
+        if ending and is_token_boundary(after):
+            return True
+        if (
+            not ending
+            and is_token_boundary(before)
+            and not (term.startswith("#") and before == "#")
+            and (is_token_boundary(after) or is_hangul_syllable(after))
+        ):
+            return True
+        start = index + 1
+
+
 def judge(case, output):
     failures = []
     allowed = case.get("allow_substrings") or []
@@ -212,7 +277,7 @@ def judge(case, output):
         if required not in output:
             failures.append(f"빠짐: {required}")
     for forbidden in case.get("forbidden_substrings") or []:
-        if forbidden in visible:
+        if contains_forbidden_term(visible, forbidden):
             failures.append(f"말투/금지: {forbidden}")
     bullet = any(line.strip().startswith("- ") for line in output.splitlines())
     heading = any(line.strip().startswith("###") for line in output.splitlines())
@@ -230,6 +295,47 @@ def judge(case, output):
     return failures
 
 
+def self_check():
+    """Offline proof that word boundaries, not raw substrings, decide a hit."""
+    checks = [
+        ("결제가 두 번", "제가", False),
+        ("경제가 어렵다", "제가", False),
+        ("문제가 있다", "제가", False),
+        ("제가 할게요", "제가", True),
+        ("그럼 제가 할게", "제가", True),
+        ("최저의 가격", "저의", False),
+        ("최저를 골랐어", "저를", False),
+        ("저를 불러", "저를", True),
+        ("하겠습니다", "습니다", True),
+        ("상태입니다", "입니다", True),
+        ("좋습니까", "습니까", True),
+        ("학생입니까", "입니까", True),
+        ("하십시오", "십시오", True),
+        ("해 주세요", "세요", True),
+        ("어떻게 해요", "해요", True),
+        ("아니에요", "에요", True),
+        ("이거예요", "예요", True),
+        ("고객님께 보낼 말", "고객님", True),
+        ("Slackware", "Slack", False),
+        ("Slack에 올렸어", "Slack", True),
+        ("### 요약", "### 요약", True),
+        ("#### 요약", "### 요약", False),
+    ]
+    errors = []
+    for text, term, expect in checks:
+        case = {
+            "required": [],
+            "forbidden_substrings": [term],
+            "allow_substrings": [],
+            "expect_bullets": None,
+            "expect_headings": None,
+        }
+        flagged = any(item.startswith("말투/금지") for item in judge(case, text))
+        if flagged != expect:
+            errors.append(f"{text!r} / {term}: expected {expect}, got {flagged}")
+    return errors
+
+
 def print_inventory(cases):
     print("케이스 구성 (모델을 호출하지 않은 목록)")
     for case in cases:
@@ -237,6 +343,14 @@ def print_inventory(cases):
 
 
 def main():
+    boundary_errors = self_check()
+    if boundary_errors:
+        print("금지 단어 경계 검사가 실패했다.")
+        for error in boundary_errors:
+            print(" -", error)
+        return 1
+    print("금지 단어 경계 검사 통과 (결제가 ≠ 제가, 제가 할게요는 걸림)")
+
     cases = load_cases()
     errors = check_case_set(cases)
     if errors:
