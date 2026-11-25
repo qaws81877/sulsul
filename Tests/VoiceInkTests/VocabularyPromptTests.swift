@@ -3,7 +3,7 @@ import XCTest
 @testable import VoiceInk
 
 final class VocabularyPromptTests: XCTestCase {
-    private let koreanLanguagePrompt = "안녕하세요, 잘 지내시나요? 만나서 반갑습니다."
+    private let koreanLanguagePrompt = "회의 일정, 사람 이름, 숫자, 제품명."
 
     func testCleanupSystemPromptIsUnchangedWithoutVocabulary() {
         let base = KoreanCleanupPrompt.text
@@ -42,7 +42,44 @@ final class VocabularyPromptTests: XCTestCase {
         XCTAssertEqual(WhisperVocabularyPrompt.prompt(languagePrompt: "", terms: []), "")
     }
 
+    func testKoreanWhisperDefaultHasNoSpeechLevelAndCustomPromptsWin() {
+        let key = "CustomLanguagePrompts"
+        let previous = UserDefaults.standard.dictionary(forKey: key)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+
+        UserDefaults.standard.removeObject(forKey: key)
+        let prompt = WhisperPrompt.resolvedPrompt(for: "ko")
+        XCTAssertEqual(prompt, koreanLanguagePrompt)
+        XCTAssertFalse(prompt.contains("감사합니다"))
+        XCTAssertFalse(prompt.contains("안녕하세요"))
+        XCTAssertFalse(prompt.contains("습니다"))
+        XCTAssertFalse(prompt.contains("요"))
+
+        UserDefaults.standard.set(["ko": ""], forKey: key)
+        XCTAssertEqual(WhisperPrompt.resolvedPrompt(for: "ko"), koreanLanguagePrompt)
+
+        UserDefaults.standard.set(["ko": "안녕하세요, 잘 지내시나요?"], forKey: key)
+        XCTAssertEqual(WhisperPrompt.resolvedPrompt(for: "ko"), "안녕하세요, 잘 지내시나요?")
+    }
+
     func testWhisperPromptAppendsExactSpellings() {
+        let key = "CustomLanguagePrompts"
+        let previous = UserDefaults.standard.dictionary(forKey: key)
+        UserDefaults.standard.removeObject(forKey: key)
+        defer {
+            if let previous {
+                UserDefaults.standard.set(previous, forKey: key)
+            } else {
+                UserDefaults.standard.removeObject(forKey: key)
+            }
+        }
+
         XCTAssertEqual(WhisperPrompt.resolvedPrompt(for: "ko"), koreanLanguagePrompt)
         let prompt = WhisperVocabularyPrompt.prompt(
             languagePrompt: koreanLanguagePrompt,

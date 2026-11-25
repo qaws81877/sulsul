@@ -248,6 +248,57 @@ final class KoreanCleanupTests: XCTestCase {
         XCTAssertTrue(migrated[1].useSystemInstructions)
     }
 
+    func testOrganizeMigrationReplacesOnlyTheUnmodifiedSeed() {
+        let legacy = CustomPrompt(
+            id: PromptTemplates.organizePromptId,
+            title: "Organize",
+            promptText: KoreanCleanupPromptMigration.legacyUnmodifiedOrganizePromptText,
+            useSystemInstructions: true
+        )
+        let edited = CustomPrompt(
+            id: PromptTemplates.organizePromptId,
+            title: "Organize",
+            promptText: "user edited organize",
+            useSystemInstructions: true
+        )
+        let untouchedDefault = CustomPrompt(
+            id: PromptTemplates.defaultPromptId,
+            title: "Default",
+            promptText: KoreanCleanupPrompt.text,
+            useSystemInstructions: false
+        )
+        let migrated = KoreanCleanupPromptMigration.migrate([legacy, edited, untouchedDefault])
+        XCTAssertEqual(migrated[0].promptText, KoreanOrganizePrompt.text)
+        XCTAssertFalse(migrated[0].useSystemInstructions)
+        XCTAssertEqual(migrated[1].promptText, "user edited organize")
+        XCTAssertTrue(migrated[1].useSystemInstructions)
+        XCTAssertEqual(migrated[2].promptText, KoreanCleanupPrompt.text)
+        XCTAssertNotEqual(
+            KoreanCleanupPromptMigration.legacyUnmodifiedOrganizePromptText,
+            KoreanOrganizePrompt.text
+        )
+        XCTAssertTrue(
+            KoreanCleanupPromptMigration.legacyUnmodifiedOrganizePromptText.contains("더 많이 쓴 쪽으로 맞춰라")
+        )
+        XCTAssertFalse(KoreanOrganizePrompt.text.contains("더 많이 쓴 쪽으로 맞춰라"))
+
+        let previous = CustomPrompt(
+            id: PromptTemplates.organizePromptId,
+            title: "Organize",
+            promptText: KoreanCleanupPromptMigration.legacyBulletOrganizePromptText,
+            useSystemInstructions: false
+        )
+        let migratedPrevious = KoreanCleanupPromptMigration.migrate([previous])
+        XCTAssertEqual(migratedPrevious[0].promptText, KoreanOrganizePrompt.text)
+        XCTAssertNotEqual(
+            KoreanCleanupPromptMigration.legacyBulletOrganizePromptText,
+            KoreanOrganizePrompt.text
+        )
+        XCTAssertFalse(
+            KoreanCleanupPromptMigration.legacyBulletOrganizePromptText.contains("템플릿만 만들어")
+        )
+    }
+
     func testDefaultSeedIsTheFrozenPrompt() throws {
         let seed = try XCTUnwrap(
             PromptTemplates.seedPrompts.first { $0.id == PromptTemplates.defaultPromptId }

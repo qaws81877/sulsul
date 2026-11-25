@@ -18,9 +18,16 @@ struct KoreanCleanupBudget: Equatable {
     static let maxTokensCap = 16_000
     static let firstTokenSecondsPerCharacter: TimeInterval = 0.002
     static let firstTokenCap: TimeInterval = 10
-    static let openAISecondsPerCharacter: TimeInterval = 0.02
-    static let anthropicSecondsPerCharacter: TimeInterval = 0.03
+    /// ~4 characters a second of speech, so 10 minutes is about 2,500 characters.
+    /// 0.05 s/char gives that recording 125 s on OpenAI. The old 0.02 rate left
+    /// a 1,000-character cleanup only 20 s.
+    static let openAISecondsPerCharacter: TimeInterval = 0.05
+    /// 0.10 s/char gives 2,500 characters 250 s. The old 0.03 rate left
+    /// 1,000 characters on the 30 s floor, which timed out on Sonnet.
+    static let anthropicSecondsPerCharacter: TimeInterval = 0.10
     static let overallCap: TimeInterval = 300
+    /// The fallback call gets at least this long, even when OpenAI used its whole budget.
+    static let fallbackMinimum: TimeInterval = 45
 
     let maxTokens: Int
     let openAIFirstToken: TimeInterval
@@ -34,9 +41,38 @@ struct KoreanCleanupBudget: Equatable {
         anthropicOverall: KoreanCleanupTimeouts.anthropicOverall
     )
 
-    static func forTranscript(_ transcript: String) -> KoreanCleanupBudget {
+    /// Extra wait for models that think before answering. Nil effort adds nothing,
+    /// which is the Haiku fallback (thinking stays off).
+    static func reasoningAllowance(for effort: AnthropicEffort?) -> TimeInterval {
+        switch effort {
+        case nil:
+            return 0
+        case .low:
+            return 30
+        case .medium:
+            return 60
+        case .high:
+            return 120
+        case .xhigh, .max:
+            return 180
+        }
+    }
+
+    /// Effort that will actually be sent. Models that cannot disable thinking
+    /// run at low when the mode has not picked a level.
+    static func anthropicEffort(model: String, selected: AnthropicEffort?) -> AnthropicEffort? {
+        guard AnthropicReasoningPolicy.supportsEffortSelection(model) else { return nil }
+        return selected ?? .default
+    }
+
+    static func forTranscript(
+        _ transcript: String,
+        anthropicEffort: AnthropicEffort? = nil
+    ) -> KoreanCleanupBudget {
         let characters = transcript.count
         let seconds = TimeInterval(characters)
+        let reasoning = reasoningAllowance(for: anthropicEffort)
+        let openAICap = overallCap - fallbackMinimum
         return KoreanCleanupBudget(
             maxTokens: min(maxTokensCap, max(KoreanCleanupModels.maxTokens, characters * tokensPerCharacter)),
             openAIFirstToken: clamp(
@@ -47,21 +83,24 @@ struct KoreanCleanupBudget: Equatable {
             openAIOverall: clamp(
                 seconds * openAISecondsPerCharacter,
                 floor: KoreanCleanupTimeouts.openAIOverall,
-                cap: overallCap
+                cap: openAICap
             ),
             anthropicOverall: clamp(
-                seconds * anthropicSecondsPerCharacter,
-                floor: KoreanCleanupTimeouts.anthropicOverall,
+                seconds * anthropicSecondsPerCharacter + reasoning,
+                floor: KoreanCleanupTimeouts.anthropicOverall + reasoning,
                 cap: overallCap
             )
         )
     }
 
-    /// Anthropic deadline after an OpenAI attempt, so both providers together stay within
-    /// `anthropicOverall`. Returns nil when no time is left for a fallback.
+    /// Time for the Anthropic attempt after OpenAI. At least `fallbackMinimum`,
+    /// and the Anthropic budget when the overall cap still has room.
+    /// Nil only when OpenAI already used the whole cap.
     func anthropicFallbackLimit(afterOpenAIElapsed elapsed: TimeInterval) -> TimeInterval? {
-        let remaining = anthropicOverall - elapsed
-        return remaining > 0 ? remaining : nil
+        let room = KoreanCleanupBudget.overallCap - elapsed
+        guard room > 0 else { return nil }
+        let wanted = max(KoreanCleanupBudget.fallbackMinimum, anthropicOverall)
+        return min(wanted, room)
     }
 
     func withAnthropicOverall(_ limit: TimeInterval) -> KoreanCleanupBudget {

@@ -62,23 +62,28 @@ final class KoreanCleanupStabilityTests: XCTestCase {
         XCTAssertFalse(KoreanCleanupPolicy.shouldFallBackToAnthropic(.outputTruncated, hasAnthropicKey: false))
     }
 
-    func testAnthropicFallbackSharesTheOverallDeadline() {
+    func testAnthropicFallbackKeepsAMinimumInsideTheCap() {
         let budget = KoreanCleanupBudget.base
         XCTAssertEqual(
             budget.anthropicFallbackLimit(afterOpenAIElapsed: budget.openAIOverall),
-            budget.anthropicOverall - budget.openAIOverall
+            KoreanCleanupBudget.fallbackMinimum
         )
-        XCTAssertNil(budget.anthropicFallbackLimit(afterOpenAIElapsed: budget.anthropicOverall))
+        XCTAssertNil(budget.anthropicFallbackLimit(afterOpenAIElapsed: KoreanCleanupBudget.overallCap))
         XCTAssertEqual(budget.withAnthropicOverall(4).anthropicOverall, 4)
         XCTAssertEqual(budget.withAnthropicOverall(4).maxTokens, budget.maxTokens)
 
-        // 3,000 characters: OpenAI 60 s, shared deadline 90 s, so a timed-out OpenAI leaves 30 s.
-        let long = KoreanCleanupBudget.forTranscript(String(repeating: "가", count: 3_000))
-        XCTAssertEqual(long.anthropicFallbackLimit(afterOpenAIElapsed: long.openAIOverall) ?? 0, 30, accuracy: 0.001)
-
-        // At the 300 s cap both limits are equal, so a timed-out OpenAI leaves nothing to wait for.
         let capped = KoreanCleanupBudget.forTranscript(String(repeating: "가", count: 20_000))
-        XCTAssertNil(capped.anthropicFallbackLimit(afterOpenAIElapsed: capped.openAIOverall))
+        XCTAssertEqual(
+            capped.openAIOverall,
+            KoreanCleanupBudget.overallCap - KoreanCleanupBudget.fallbackMinimum,
+            accuracy: 0.001
+        )
+        XCTAssertEqual(
+            capped.anthropicFallbackLimit(afterOpenAIElapsed: capped.openAIOverall) ?? 0,
+            KoreanCleanupBudget.fallbackMinimum,
+            accuracy: 0.001
+        )
+        XCTAssertNil(capped.anthropicFallbackLimit(afterOpenAIElapsed: KoreanCleanupBudget.overallCap))
         XCTAssertNotNil(capped.anthropicFallbackLimit(afterOpenAIElapsed: 1))
     }
 
