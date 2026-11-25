@@ -79,8 +79,13 @@ enum KoreanCleanupAdoption {
             else { return }
             updated.isAIEnhancementEnabled = true
             updated.selectedPrompt = promptId.uuidString
-            updated.selectedAIProvider = AIProvider.openAI.rawValue
-            updated.selectedAIModel = KoreanCleanupModels.openAI
+            if promptId == PromptTemplates.organizePromptId {
+                updated.selectedAIProvider = AIProvider.anthropic.rawValue
+                updated.selectedAIModel = KoreanOrganizeModels.anthropic
+            } else {
+                updated.selectedAIProvider = AIProvider.openAI.rawValue
+                updated.selectedAIModel = KoreanCleanupModels.openAI
+            }
             manager.updateConfiguration(updated)
             defaults.set(true, forKey: didApplyKey)
         }
@@ -140,6 +145,36 @@ enum KoreanOrganizeAdoption {
         }
         defaults.set(true, forKey: didApplyKey)
         return updatedPrompts
+    }
+}
+
+/// Moves every untouched Organize mode onto Sonnet. A mode that picked its own
+/// model is left alone. The verbatim Default prompt keeps Luna. Runs even after
+/// the earlier Organize-prompt switch, which only changed the prompt.
+enum KoreanOrganizeModelAdoption {
+    static let didApplyKey = "DidApplyKoreanOrganizeSonnetDefault"
+
+    static func shouldMoveToSonnet(_ mode: ModeConfig) -> Bool {
+        mode.selectedPrompt == PromptTemplates.organizePromptId.uuidString
+            && KoreanCleanupPolicy.isOrganizeStockSelection(
+                providerName: mode.selectedAIProvider,
+                modelName: mode.selectedAIModel
+            )
+            && (mode.selectedAIProvider != AIProvider.anthropic.rawValue
+                || mode.selectedAIModel != KoreanOrganizeModels.anthropic)
+    }
+
+    @MainActor
+    static func applyIfNeeded(defaults: UserDefaults = .standard) {
+        guard !defaults.bool(forKey: didApplyKey) else { return }
+        let manager = ModeManager.shared
+        for mode in manager.configurations where shouldMoveToSonnet(mode) {
+            var updated = mode
+            updated.selectedAIProvider = AIProvider.anthropic.rawValue
+            updated.selectedAIModel = KoreanOrganizeModels.anthropic
+            manager.updateConfiguration(updated)
+        }
+        defaults.set(true, forKey: didApplyKey)
     }
 }
 

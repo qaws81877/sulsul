@@ -8,6 +8,10 @@
 
 키가 하나도 없으면 모델을 호출하지 않고, 케이스 구성만 검사한다.
 프롬프트는 Tests/VoiceInkTests/prompt_ko_organize_v1.txt (앱에 실리는 글)이다.
+기본 호출은 앱의 정리(Organize) 순서와 같다. 본판은 claude-sonnet-5-5 이고
+생각은 AnthropicReasoningPolicy 와 같이 adaptive, effort low 다.
+thinking disabled 는 이 모델에서 400 이다. 예비는 gpt-6-luna, reasoning_effort none.
+키가 둘 다 있으면 본판과 예비를 각각 돌려 비교한다. 앱은 본판이 실패할 때만 예비를 부른다.
 """
 
 from __future__ import annotations
@@ -27,8 +31,12 @@ PROMPT_SOURCE = ROOT / "VoiceInk/Features/Enhancement/KoreanCleanup/KoreanOrgani
 
 OPENAI_URL = "https://api.openai.com/v1/chat/completions"
 ANTHROPIC_URL = "https://api.anthropic.com/v1/messages"
-OPENAI_MODEL = "gpt-6-luna"
-ANTHROPIC_MODEL = "claude-haiku-5-5"
+MAIN_MODEL = "claude-sonnet-5-5"
+FALLBACK_MODEL = "gpt-6-luna"
+# Same request shape as AnthropicReasoningPolicy for claude-sonnet-5-5 at the lowest effort.
+SONNET_THINKING_TYPE = "adaptive"
+SONNET_EFFORT = "low"
+SONNET_THINKING_HEADROOM = 2048
 REQUEST_TIMEOUT = 300
 
 
@@ -106,7 +114,7 @@ def call_openai(prompt, transcript, api_key):
             "Content-Type": "application/json",
         },
         {
-            "model": OPENAI_MODEL,
+            "model": FALLBACK_MODEL,
             "messages": [
                 {"role": "system", "content": prompt},
                 {"role": "user", "content": user_message(transcript)},
@@ -121,7 +129,7 @@ def call_openai(prompt, transcript, api_key):
     return content or ""
 
 
-def call_anthropic(prompt, transcript, api_key):
+def call_anthropic(prompt, transcript, api_key, model):
     payload = post_json(
         ANTHROPIC_URL,
         {
@@ -130,12 +138,12 @@ def call_anthropic(prompt, transcript, api_key):
             "Content-Type": "application/json",
         },
         {
-            "model": ANTHROPIC_MODEL,
-            "max_tokens": max_tokens(transcript),
+            "model": model,
+            "max_tokens": max_tokens(transcript) + SONNET_THINKING_HEADROOM,
             "system": prompt,
             "messages": [{"role": "user", "content": user_message(transcript)}],
-            "thinking": {"type": "disabled"},
-            "output_config": {"effort": "low"},
+            "thinking": {"type": SONNET_THINKING_TYPE},
+            "output_config": {"effort": SONNET_EFFORT},
         },
     )
     parts = []
@@ -249,10 +257,20 @@ def main():
     openai_key = (os.environ.get("OPENAI_API_KEY") or "").strip()
     anthropic_key = (os.environ.get("ANTHROPIC_API_KEY") or "").strip()
     models = []
-    if openai_key:
-        models.append((OPENAI_MODEL, lambda text, key=openai_key: call_openai(prompt, text, key)))
     if anthropic_key:
-        models.append((ANTHROPIC_MODEL, lambda text, key=anthropic_key: call_anthropic(prompt, text, key)))
+        models.append(
+            (
+                f"main {MAIN_MODEL}",
+                lambda text, key=anthropic_key: call_anthropic(prompt, text, key, MAIN_MODEL),
+            )
+        )
+    if openai_key:
+        models.append(
+            (
+                f"fallback {FALLBACK_MODEL}",
+                lambda text, key=openai_key: call_openai(prompt, text, key),
+            )
+        )
 
     print_inventory(cases)
     if not models:
