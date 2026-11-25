@@ -52,6 +52,7 @@ class AIEnhancementService: ObservableObject {
         let migratedPrompts = KoreanOrganizeAdoption.applyIfNeeded(
             prompts: KoreanCleanupPromptMigration.migrate(customPrompts)
         )
+        KoreanOrganizeModelAdoption.applyIfNeeded()
         if migratedPrompts != customPrompts {
             customPrompts = migratedPrompts
             savePrompts()
@@ -232,7 +233,8 @@ class AIEnhancementService: ObservableObject {
                     credentials: credentials,
                     selectedProvider: configuration.mode?.selectedAIProvider ?? configuration.provider?.rawValue,
                     selectedModel: configuration.mode?.selectedAIModel ?? configuration.modelName,
-                    anthropicEffort: configuration.mode?.anthropicEffort
+                    anthropicEffort: configuration.mode?.anthropicEffort,
+                    promptId: prompt.id
                 )
             } catch let reason as KoreanCleanupFallbackReason {
                 throw KoreanCleanupPolicy.enhancementError(for: reason)

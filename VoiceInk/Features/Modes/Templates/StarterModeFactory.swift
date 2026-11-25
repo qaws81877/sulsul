@@ -72,11 +72,11 @@ enum StarterModeFactory {
         selectedLanguage: String,
         installedApps: [InstalledAppInfo]
     ) -> ModeConfig {
-        let usesKoreanCleanup = template.kind == .clean
-        let resolvedProvider = usesKoreanCleanup ? AIProvider.openAI : provider
+        let usesOrganize = template.kind == .clean
+        let resolvedProvider = usesOrganize ? AIProvider.anthropic : provider
         let resolvedModel =
-            usesKoreanCleanup
-            ? KoreanCleanupModels.openAI
+            usesOrganize
+            ? KoreanOrganizeModels.anthropic
             : (modelName ?? provider.defaultModel)
 
         return ModeConfig(

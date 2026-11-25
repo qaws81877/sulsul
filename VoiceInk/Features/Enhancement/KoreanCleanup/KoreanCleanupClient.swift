@@ -1,9 +1,10 @@
 import Foundation
 import os
 
-/// Streams the default Korean cleanup call.
-/// OpenAI (the mode's model, `gpt-6-luna` by default) is primary and Anthropic `claude-haiku-5-5`
-/// is the fallback. When the mode selects Anthropic, only the mode's Anthropic model is called.
+/// Streams a Korean cleanup call.
+/// Verbatim Default cleanup tries OpenAI `gpt-6-luna`, then Anthropic `claude-haiku-5-5`.
+/// Untouched Organize tries Anthropic `claude-sonnet-5-5` (adaptive thinking, low effort),
+/// then OpenAI `gpt-6-luna`. A mode that picked its own model keeps that provider order.
 /// The fallback gets its own budget, at least `KoreanCleanupBudget.fallbackMinimum`, without
 /// the two calls together passing `overallCap`. If no provider produces complete text,
 /// this throws so the caller pastes the raw transcript with a warning; a cancelled task throws
@@ -17,13 +18,15 @@ enum KoreanCleanupClient {
         credentials: KoreanCleanupCredentials,
         selectedProvider: String? = nil,
         selectedModel: String? = nil,
-        anthropicEffort: AnthropicEffort? = nil
+        anthropicEffort: AnthropicEffort? = nil,
+        promptId: UUID? = nil
     ) async throws -> String {
         let keys = credentials.keys
         let models = KoreanCleanupPolicy.models(
             selectedProvider: selectedProvider,
             selectedModel: selectedModel,
-            anthropicEffort: anthropicEffort
+            anthropicEffort: anthropicEffort,
+            promptId: promptId
         )
         let budget = KoreanCleanupBudget.forTranscript(
             transcript,
@@ -32,7 +35,12 @@ enum KoreanCleanupClient {
                 selected: models.anthropicEffort
             )
         )
-        switch KoreanCleanupPolicy.route(keys: keys, selectedProvider: selectedProvider) {
+        switch KoreanCleanupPolicy.route(
+            keys: keys,
+            selectedProvider: selectedProvider,
+            selectedModel: selectedModel,
+            promptId: promptId
+        ) {
         case .pasteTranscript:
             throw KoreanCleanupFallbackReason.requestFailed
         case .anthropicOnly:
@@ -83,6 +91,51 @@ enum KoreanCleanupClient {
                     budget: budget.withAnthropicOverall(remaining),
                     models: models
                 )
+            }
+        case .anthropicThenOpenAI:
+            guard let apiKey = credentials.anthropicToken else {
+                throw KoreanCleanupFallbackReason.requestFailed
+            }
+            let clock = ContinuousClock()
+            let started = clock.now
+            let anthropic = await completeAnthropic(
+                transcript: transcript,
+                systemPrompt: systemPrompt,
+                apiKey: apiKey,
+                budget: budget,
+                models: models
+            )
+            switch anthropic {
+            case .success(let text):
+                return text
+            case .failure(let reason):
+                try Task.checkCancellation()
+                logger.error(
+                    "Anthropic cleanup fell back reason=\(String(describing: reason), privacy: .public)"
+                )
+                guard KoreanCleanupPolicy.shouldFallBackToAnthropic(reason, hasAnthropicKey: keys.openAI),
+                    let openAIKey = credentials.openAIToken
+                else {
+                    throw reason
+                }
+                let anthropicElapsed = seconds(from: started.duration(to: clock.now))
+                guard let remaining = budget.openAIFallbackLimit(afterAnthropicElapsed: anthropicElapsed) else {
+                    throw KoreanCleanupFallbackReason.overallTimeout
+                }
+                let openAI = await completeOpenAI(
+                    transcript: transcript,
+                    systemPrompt: systemPrompt,
+                    apiKey: openAIKey,
+                    budget: budget.withOpenAIOverall(remaining),
+                    models: models
+                )
+                switch openAI {
+                case .success(let text):
+                    return text
+                case .failure(let openAIReason):
+                    try Task.checkCancellation()
+                    throw openAIReason
+                }
             }
         }
     }

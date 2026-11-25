@@ -97,10 +97,28 @@ struct KoreanCleanupBudget: Equatable {
     /// and the Anthropic budget when the overall cap still has room.
     /// Nil only when OpenAI already used the whole cap.
     func anthropicFallbackLimit(afterOpenAIElapsed elapsed: TimeInterval) -> TimeInterval? {
+        fallbackLimit(preferred: anthropicOverall, afterElapsed: elapsed)
+    }
+
+    /// Time for the OpenAI attempt after Anthropic. Same floor and cap as the other direction.
+    func openAIFallbackLimit(afterAnthropicElapsed elapsed: TimeInterval) -> TimeInterval? {
+        fallbackLimit(preferred: openAIOverall, afterElapsed: elapsed)
+    }
+
+    private func fallbackLimit(preferred: TimeInterval, afterElapsed elapsed: TimeInterval) -> TimeInterval? {
         let room = KoreanCleanupBudget.overallCap - elapsed
         guard room > 0 else { return nil }
-        let wanted = max(KoreanCleanupBudget.fallbackMinimum, anthropicOverall)
+        let wanted = max(KoreanCleanupBudget.fallbackMinimum, preferred)
         return min(wanted, room)
+    }
+
+    func withOpenAIOverall(_ limit: TimeInterval) -> KoreanCleanupBudget {
+        KoreanCleanupBudget(
+            maxTokens: maxTokens,
+            openAIFirstToken: min(openAIFirstToken, limit),
+            openAIOverall: limit,
+            anthropicOverall: anthropicOverall
+        )
     }
 
     func withAnthropicOverall(_ limit: TimeInterval) -> KoreanCleanupBudget {
@@ -127,6 +145,12 @@ enum KoreanCleanupModels {
     static let anthropicVersion = "2023-06-01"
 }
 
+/// Organize's own pair. The verbatim Default cleanup keeps `KoreanCleanupModels`.
+enum KoreanOrganizeModels {
+    static let anthropic = "claude-sonnet-5-5"
+    static let openAI = KoreanCleanupModels.openAI
+}
+
 struct KoreanCleanupModelChoice: Equatable {
     static let defaults = KoreanCleanupModelChoice(
         openAI: KoreanCleanupModels.openAI,
@@ -141,6 +165,7 @@ struct KoreanCleanupModelChoice: Equatable {
 
 enum KoreanCleanupRoute: Equatable {
     case openAIThenAnthropic
+    case anthropicThenOpenAI
     case anthropicOnly
     case pasteTranscript
 }
@@ -191,8 +216,51 @@ enum KoreanCleanupPolicy {
         route(keys: keys, selectedProvider: nil)
     }
 
-    /// OpenAI is primary for the default pair. An explicit Anthropic selection uses Haiku directly.
+    /// OpenAI is primary for the verbatim Default pair. An explicit Anthropic selection uses that
+    /// provider directly. Organize's untouched pair is handled by the overload that knows the prompt.
     static func route(keys: KoreanCleanupKeys, selectedProvider: String?) -> KoreanCleanupRoute {
+        standardRoute(keys: keys, selectedProvider: selectedProvider)
+    }
+
+    static func route(
+        keys: KoreanCleanupKeys,
+        selectedProvider: String?,
+        selectedModel: String?,
+        promptId: UUID?
+    ) -> KoreanCleanupRoute {
+        if promptId == PromptTemplates.organizePromptId,
+            isOrganizeStockSelection(providerName: selectedProvider, modelName: selectedModel)
+        {
+            if keys.anthropic, keys.openAI {
+                return .anthropicThenOpenAI
+            }
+            if keys.anthropic {
+                return .anthropicOnly
+            }
+            if keys.openAI {
+                return .openAIThenAnthropic
+            }
+            return .pasteTranscript
+        }
+        return standardRoute(keys: keys, selectedProvider: selectedProvider)
+    }
+
+    /// The provider/model pair the app itself installed for cleanup. A different model is a user choice.
+    static func isOrganizeStockSelection(providerName: String?, modelName: String?) -> Bool {
+        if isDefaultCleanupSelection(providerName: providerName, modelName: modelName) {
+            return true
+        }
+        let provider = providerName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let model = modelName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        let usesAnthropic = provider.isEmpty || provider == AIProvider.anthropic.rawValue
+        let usesSonnet = model.isEmpty || model == KoreanOrganizeModels.anthropic
+        return usesAnthropic && usesSonnet
+    }
+
+    private static func standardRoute(
+        keys: KoreanCleanupKeys,
+        selectedProvider: String?
+    ) -> KoreanCleanupRoute {
         if selectedProvider == AIProvider.anthropic.rawValue {
             return keys.anthropic ? .anthropicOnly : .pasteTranscript
         }
@@ -263,8 +331,18 @@ enum KoreanCleanupPolicy {
     static func models(
         selectedProvider: String?,
         selectedModel: String?,
-        anthropicEffort: AnthropicEffort? = nil
+        anthropicEffort: AnthropicEffort? = nil,
+        promptId: UUID? = nil
     ) -> KoreanCleanupModelChoice {
+        if promptId == PromptTemplates.organizePromptId,
+            isOrganizeStockSelection(providerName: selectedProvider, modelName: selectedModel)
+        {
+            return KoreanCleanupModelChoice(
+                openAI: KoreanOrganizeModels.openAI,
+                anthropic: KoreanOrganizeModels.anthropic,
+                anthropicEffort: anthropicEffort
+            )
+        }
         let model = selectedModel?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
         switch selectedProvider {
         case AIProvider.anthropic.rawValue:

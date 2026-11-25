@@ -225,6 +225,174 @@ final class KoreanOrganizeTests: XCTestCase {
         XCTAssertFalse(KoreanOrganizeAdoption.shouldSwitchToOrganize(other))
     }
 
+    func testUntouchedOrganizeUsesSonnetThenLuna() {
+        let keys = KoreanCleanupKeys(openAI: true, anthropic: true)
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: keys,
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: KoreanCleanupModels.openAI,
+                promptId: PromptTemplates.organizePromptId
+            ),
+            .anthropicThenOpenAI
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: KoreanCleanupKeys(openAI: false, anthropic: true),
+                selectedProvider: AIProvider.anthropic.rawValue,
+                selectedModel: KoreanOrganizeModels.anthropic,
+                promptId: PromptTemplates.organizePromptId
+            ),
+            .anthropicOnly
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: KoreanCleanupKeys(openAI: true, anthropic: false),
+                selectedProvider: AIProvider.anthropic.rawValue,
+                selectedModel: KoreanOrganizeModels.anthropic,
+                promptId: PromptTemplates.organizePromptId
+            ),
+            .openAIThenAnthropic
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.models(
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: KoreanCleanupModels.openAI,
+                promptId: PromptTemplates.organizePromptId
+            ),
+            KoreanCleanupModelChoice(
+                openAI: KoreanOrganizeModels.openAI,
+                anthropic: KoreanOrganizeModels.anthropic
+            )
+        )
+    }
+
+    func testCustomOrganizeModelKeepsTheOldProviderOrder() {
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: KoreanCleanupKeys(openAI: true, anthropic: true),
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: "gpt-6-sol",
+                promptId: PromptTemplates.organizePromptId
+            ),
+            .openAIThenAnthropic
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.models(
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: "gpt-6-sol",
+                promptId: PromptTemplates.organizePromptId
+            ),
+            KoreanCleanupModelChoice(openAI: "gpt-6-sol", anthropic: KoreanCleanupModels.anthropic)
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: KoreanCleanupKeys(openAI: true, anthropic: true),
+                selectedProvider: AIProvider.anthropic.rawValue,
+                selectedModel: "claude-sonnet-5",
+                promptId: PromptTemplates.organizePromptId
+            ),
+            .anthropicOnly
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.route(
+                keys: KoreanCleanupKeys(openAI: true, anthropic: true),
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: KoreanCleanupModels.openAI,
+                promptId: PromptTemplates.defaultPromptId
+            ),
+            .openAIThenAnthropic
+        )
+        XCTAssertEqual(
+            KoreanCleanupPolicy.models(
+                selectedProvider: AIProvider.openAI.rawValue,
+                selectedModel: KoreanCleanupModels.openAI,
+                promptId: PromptTemplates.defaultPromptId
+            ),
+            .defaults
+        )
+    }
+
+    func testSonnetOrganizeRequestThinksAtLowEffort() throws {
+        let object = try jsonObject(
+            KoreanCleanupRequestBuilder.anthropicJSON(
+                systemPrompt: "S",
+                transcript: "T",
+                model: KoreanOrganizeModels.anthropic
+            )
+        )
+        XCTAssertEqual(object["model"] as? String, KoreanOrganizeModels.anthropic)
+        XCTAssertEqual((object["thinking"] as? [String: Any])?["type"] as? String, "adaptive")
+        XCTAssertEqual((object["output_config"] as? [String: Any])?["effort"] as? String, "low")
+        XCTAssertEqual(
+            object["max_tokens"] as? Int,
+            KoreanCleanupModels.maxTokens + AnthropicEffort.low.thinkingHeadroomTokens
+        )
+
+        let luna = try jsonObject(
+            KoreanCleanupRequestBuilder.openAIJSON(
+                systemPrompt: "S",
+                transcript: "T",
+                model: KoreanOrganizeModels.openAI
+            )
+        )
+        XCTAssertEqual(luna["model"] as? String, "gpt-6-luna")
+        XCTAssertEqual(luna["reasoning_effort"] as? String, "none")
+    }
+
+    func testOnlyUntouchedOrganizeModesMoveToSonnet() {
+        XCTAssertTrue(
+            KoreanOrganizeModelAdoption.shouldMoveToSonnet(
+                dictation(prompt: PromptTemplates.organizePromptId.uuidString)
+            )
+        )
+        XCTAssertTrue(
+            KoreanOrganizeModelAdoption.shouldMoveToSonnet(
+                dictation(
+                    prompt: PromptTemplates.organizePromptId.uuidString,
+                    provider: AIProvider.anthropic.rawValue,
+                    model: KoreanCleanupModels.anthropic
+                )
+            )
+        )
+        XCTAssertFalse(
+            KoreanOrganizeModelAdoption.shouldMoveToSonnet(
+                dictation(
+                    prompt: PromptTemplates.organizePromptId.uuidString,
+                    provider: AIProvider.anthropic.rawValue,
+                    model: KoreanOrganizeModels.anthropic
+                )
+            )
+        )
+        XCTAssertFalse(
+            KoreanOrganizeModelAdoption.shouldMoveToSonnet(
+                dictation(
+                    prompt: PromptTemplates.organizePromptId.uuidString,
+                    provider: AIProvider.openAI.rawValue,
+                    model: "gpt-6-sol"
+                )
+            )
+        )
+        XCTAssertFalse(
+            KoreanOrganizeModelAdoption.shouldMoveToSonnet(
+                dictation(prompt: PromptTemplates.defaultPromptId.uuidString)
+            )
+        )
+        var other = dictation(prompt: PromptTemplates.organizePromptId.uuidString)
+        other.id = UUID()
+        XCTAssertTrue(KoreanOrganizeModelAdoption.shouldMoveToSonnet(other))
+    }
+
+    func testLunaFallbackKeepsAMinimumAfterSonnet() {
+        let budget = KoreanCleanupBudget.forTranscript(
+            String(repeating: "가", count: 1_000),
+            anthropicEffort: .low
+        )
+        let limit = budget.openAIFallbackLimit(afterAnthropicElapsed: budget.anthropicOverall)
+        XCTAssertNotNil(limit)
+        XCTAssertGreaterThanOrEqual(limit ?? 0, KoreanCleanupBudget.fallbackMinimum)
+    }
+
     func testDictationStarterUsesOrganize() throws {
         let template = try XCTUnwrap(StarterModeCatalog.templates.first { $0.kind == .clean })
         XCTAssertEqual(template.promptId, PromptTemplates.organizePromptId)
